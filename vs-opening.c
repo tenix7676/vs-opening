@@ -74,9 +74,12 @@ int main(int argc, char** argv)
             {
                 Lab lab = {L,C*cos(h),C*sin(h)};
                 RGB rgb = oklab_to_linear_srgb(lab);
-                pixels[i*width*4+4*j+0]=fmax(0, fmin(255, floor(rgb.r * 256.0)));
-                pixels[i*width*4+4*j+1]=fmax(0, fmin(255, floor(rgb.g * 256.0)));
-                pixels[i*width*4+4*j+2]=fmax(0, fmin(255, floor(rgb.b * 256.0)));
+                // if(rgb.r > 1.) { printf("r:%f\n",rgb.r); SDL_Delay(100); }
+                // if(rgb.g > 1.) { printf("g:%f\n",rgb.g); SDL_Delay(100); }
+                // if(rgb.b > 1.) { printf("b:%f\n",rgb.b); SDL_Delay(100); }
+                pixels[i*width*4+4*j+0]=fmin(255, rgb.r * 255.0);
+                pixels[i*width*4+4*j+1]=fmin(255, rgb.g * 255.0);
+                pixels[i*width*4+4*j+2]=fmin(255, rgb.b * 255.0);
                 pixels[i*width*4+4*j+3]=255;
                 h+=1./(width*height)*2*M_PI;               
             }
