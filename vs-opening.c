@@ -11,7 +11,8 @@ int main(int argc, char** argv)
     SDL_GetWindowSize(win, &width, &height);
     Uint64 sum=0;
     int it=1;
-    SDL_FPoint points[690*420];
+    SDL_FPoint* points = malloc(690*420*sizeof(SDL_FPoint));
+    //SDL_FPoint points[690*420];
     while(true)
     {
         SDL_Event e;
@@ -28,12 +29,14 @@ int main(int argc, char** argv)
         for(int i=0; i < height; ++i)
             for(int j=0; j < width; ++j)
             {
-                SDL_SetRenderDrawColorFloat(ren,1,1,1,1);
-                SDL_RenderPoint(ren,j,i);
+                SDL_FPoint p = {j, i};
+                points[i*width+j]=p;
             }
+        SDL_SetRenderDrawColorFloat(ren,1,1,1,1);
+        SDL_RenderPoints(ren,points, 690*420); //its okay, but no different colors
         Uint64 end=SDL_GetTicks();
         sum+=end-start;
-        if(it%10==0) //it is never 1 but whatever
+        if(it%10==0) //it is never 0 but whatever
         {
             printf("%d, %d\n",width, height);
             printf("avg: %.1fms\n",sum/(float)it);
