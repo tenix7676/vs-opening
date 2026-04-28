@@ -11,8 +11,10 @@ int main(int argc, char** argv)
     SDL_GetWindowSize(win, &width, &height);
     Uint64 sum=0;
     int it=1;
-    SDL_FPoint* points = malloc(690*420*sizeof(SDL_FPoint));
-    //SDL_FPoint points[690*420];
+    SDL_Texture* screen_text=SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    unsigned char* pixels = malloc(4*width*height*sizeof(char));
+    
+
     while(true)
     {
         SDL_Event e;
@@ -23,23 +25,23 @@ int main(int argc, char** argv)
         }
         SDL_SetRenderDrawColorFloat(ren,0,0,0,1);
         SDL_RenderClear(ren);
-        Uint64 start=SDL_GetTicks();
-        //SDL_RenderPoints(SDL_Renderer *renderer, const SDL_FPoint *points, int count);
-        //SDL_RenderTexture(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_FRect *srcrect, const SDL_FRect *dstrect);
+        Uint64 start=SDL_GetTicksNS();
         for(int i=0; i < height; ++i)
             for(int j=0; j < width; ++j)
             {
-                SDL_FPoint p = {j, i};
-                points[i*width+j]=p;
+                pixels[i*width*4+4*j+0]=255;
+                pixels[i*width*4+4*j+1]=255;
+                pixels[i*width*4+4*j+2]=255;
+                pixels[i*width*4+4*j+3]=255;
             }
-        SDL_SetRenderDrawColorFloat(ren,1,1,1,1);
-        SDL_RenderPoints(ren,points, 690*420); //its okay, but no different colors
-        Uint64 end=SDL_GetTicks();
+        SDL_UpdateTexture(screen_text, NULL, pixels, 4*width);
+        SDL_RenderTexture(ren, screen_text, NULL, NULL);
+        Uint64 end=SDL_GetTicksNS();
         sum+=end-start;
         if(it%10==0) //it is never 0 but whatever
         {
             printf("%d, %d\n",width, height);
-            printf("avg: %.1fms\n",sum/(float)it);
+            printf("avg: %.1fms\n",sum/(float)it/1000.);
             it=0;
             sum=0;
         }
