@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <math.h>
+#define M_PI        3.14159265358979323846
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_main.h"
 typedef struct Lab {float L; float a; float b;} Lab;
@@ -67,18 +69,18 @@ int main(int argc, char** argv)
         SDL_RenderClear(ren);
         Uint64 start=SDL_GetTicksNS();
         for(int i=0; i < height; ++i)
+        {
             for(int j=0; j < width; ++j)
             {
                 Lab lab = {L,C*cos(h),C*sin(h)};
                 RGB rgb = oklab_to_linear_srgb(lab);
-                pixels[i*width*4+4*j+0]=0;
-                pixels[i*width*4+4*j+1]=0;(unsigned char)(255*rgb.g);
-                pixels[i*width*4+4*j+2]=0;(unsigned char)(255*rgb.b);
-                pixels[i*width*4+4*j+3]=0;(unsigned char)(255*rgb.r);
+                pixels[i*width*4+4*j+0]=fmax(0, fmin(255, floor(rgb.r * 256.0)));
+                pixels[i*width*4+4*j+1]=fmax(0, fmin(255, floor(rgb.g * 256.0)));
+                pixels[i*width*4+4*j+2]=fmax(0, fmin(255, floor(rgb.b * 256.0)));
                 pixels[i*width*4+4*j+3]=255;
-                h+=1./(width*height);
-                
+                h+=1./(width*height)*2*M_PI;               
             }
+        }
         h=0;
         SDL_UpdateTexture(screen_text, NULL, pixels, 4*width);
         SDL_RenderTexture(ren, screen_text, NULL, NULL);
