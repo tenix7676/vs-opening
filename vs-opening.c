@@ -45,23 +45,18 @@ RGB oklab_to_linear_srgb(Lab c)
 int main(int argc, char** argv)
 {
     SDL_Window* win;
-    SDL_Renderer* ren;
-    SDL_CreateWindowAndRenderer("vs-opening",690, 420, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN),&win,&ren);
+    //SDL_Renderer* ren;
+    //SDL_CreateWindowAndRenderer("vs-opening",690, 420, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN),&win,&ren);
+    win = SDL_CreateWindow("vs-opening",690, 420, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN));
     int width, height;
     SDL_GetWindowSize(win, &width, &height);
     Uint64 sum=0;
     int it=1;
-    SDL_Texture* screen_text=SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, width, height);
-    unsigned char* pixels=NULL;// = malloc(4*width*height*sizeof(char));
-    //idk why but thres a black stri[pe at the bottom :(
-    int pitch;
-    printf("pixels %p, pitch %d\n", pixels, pitch);
-    SDL_LockTexture(screen_text, NULL, &pixels, &pitch);
-    float bytes_per_pixel=pitch/(float)width;
-    printf("pixels %p, pitch %d, bpp %f\n", pixels, pitch, bytes_per_pixel);
+    SDL_Surface* screen_surf = SDL_GetWindowSurface(win);
     float L=.9;
     float C=0.125;
     float h=0.0;
+    //SDL_ClearSurface
     while(true)
     {
         SDL_Event e;
@@ -70,31 +65,20 @@ int main(int argc, char** argv)
             if(e.type == SDL_EVENT_QUIT)
                 return 0;
         }
-        SDL_SetRenderDrawColorFloat(ren,0,0,0,1);
-        SDL_RenderClear(ren);
         Uint64 start=SDL_GetTicksNS();
-        //printf("pixels %p, pitch %d\n", pixels, pitch);
-        printf("after after lock pixels %p, pitch %d\n", pixels, pitch);
         for(int i=0; i < height; ++i)
         {
             for(int j=0; j < width; ++j)
             {
                 Lab lab = {L,C*cos(h),C*sin(h)};
                 RGB rgb = oklab_to_linear_srgb(lab);
-                pixels[i*pitch+4*j+0]=fmin(255, rgb.r * 255.0);
-                pixels[i*pitch+4*j+1]=fmin(255, rgb.g * 255.0); 
-                pixels[i*pitch+4*j+2]=fmin(255, rgb.b * 255.0);
-                pixels[i*pitch+4*j+3]=255;
+                SDL_WriteSurfacePixelFloat(screen_surf, j, i,rgb.r,rgb.g,rgb.b,1);
                 h+=1./(width*height)*2*M_PI;               
             }
         }
         static int i=0;
         h=i++*0.05;
-        printf("bef ulock pixels %p, pitch %d\n", pixels, pitch);
-        SDL_UnlockTexture(screen_text);
-        printf("after lock pixels %p, pitch %d\n", pixels, pitch);
-        SDL_RenderTexture(ren, screen_text, NULL, NULL);
-        SDL_RenderPresent(ren);
+        SDL_UpdateWindowSurface(win);
         Uint64 end=SDL_GetTicksNS();
         sum+=end-start;
         if(it>=100)
