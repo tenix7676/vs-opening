@@ -106,8 +106,8 @@ int main(int argc, char** argv)
         static int i=0;
         h=i++*0.05;
         SDL_UnlockTexture(screen_text);
-        SDL_UpdateTexture(screen_text, NULL, pixels, 4*width);
         SDL_RenderTexture(ren, screen_text, NULL, NULL);
+        SDL_RenderPresent(ren);
         Uint64 end=SDL_GetTicksNS();
         sum+=end-start;
         if(it%10==0) //it is never 0 but whatever
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
             sum=0;
         }
         it++;
-        SDL_RenderPresent(ren);
+
     }
 
     return 0;
