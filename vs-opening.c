@@ -86,35 +86,40 @@ int main(int argc, char** argv)
         SDL_SetRenderDrawColorFloat(ren,0,0,0,1);
         SDL_RenderClear(ren);
         Uint64 start=SDL_GetTicksNS();
-        SDL_LockTexture(screen_text, NULL, &pixels, &pitch);
+        //SDL_LockTexture(screen_text, NULL, &pixels, &pitch);
         for(int i=0; i < height; ++i)
         {
             for(int j=0; j < width; ++j)
             {
-                Lab lab = {L,C*cos(h),C*sin(h)};
-                RGB rgb = oklab_to_linear_srgb(lab);
-                // if(rgb.r > 1.) { printf("r:%f\n",rgb.r); SDL_Delay(100); }
-                // if(rgb.g > 1.) { printf("g:%f\n",rgb.g); SDL_Delay(100); }
-                // if(rgb.b > 1.) { printf("b:%f\n",rgb.b); SDL_Delay(100); }
-                pixels[i*width*4+4*j+0]=fmin(255, rgb.r * 255.0);
-                pixels[i*width*4+4*j+1]=fmin(255, rgb.g * 255.0);
-                pixels[i*width*4+4*j+2]=fmin(255, rgb.b * 255.0);
+                // Lab lab = {L,C*cos(h),C*sin(h)};
+                // RGB rgb = oklab_to_linear_srgb(lab);
+                // // if(rgb.r > 1.) { printf("r:%f\n",rgb.r); SDL_Delay(100); }
+                // // if(rgb.g > 1.) { printf("g:%f\n",rgb.g); SDL_Delay(100); }
+                // // if(rgb.b > 1.) { printf("b:%f\n",rgb.b); SDL_Delay(100); }
+                // pixels[i*width*4+4*j+0]=fmin(255, rgb.r * 255.0);
+                // pixels[i*width*4+4*j+1]=fmin(255, rgb.g * 255.0);
+                // pixels[i*width*4+4*j+2]=fmin(255, rgb.b * 255.0);
+                // pixels[i*width*4+4*j+3]=255;
+                pixels[i*width*4+4*j+0]=255;
+                pixels[i*width*4+4*j+1]=255;
+                pixels[i*width*4+4*j+2]=255;
                 pixels[i*width*4+4*j+3]=255;
                 h+=1./(width*height)*2*M_PI;               
             }
         }
         static int i=0;
         h=i++*0.05;
-        SDL_UnlockTexture(screen_text);
+        //SDL_UnlockTexture(screen_text);
+        SDL_UpdateTexture(screen_text, NULL, pixels, pitch);
         SDL_RenderTexture(ren, screen_text, NULL, NULL);
         SDL_RenderPresent(ren);
         Uint64 end=SDL_GetTicksNS();
         sum+=end-start;
-        if(it%10==0) //it is never 0 but whatever
+        if(it>=100)
         {
             printf("%d, %d\n",width, height);
-            printf("avg: %.1fms\n",SDL_NS_TO_MS(sum/(float)it));
-            it=0;
+            printf("avg: %.3fms\n",SDL_NS_TO_MS(sum/(float)it));
+            it=1;
             sum=0;
         }
         it++;
