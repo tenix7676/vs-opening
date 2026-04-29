@@ -69,17 +69,24 @@ int main(int argc, char** argv)
                 if(e.key.key == SDLK_SPACE)
                 {
                     if(toggle)
-                    {printf("Locking texture\n");
-                    int ss = SDL_LockTexture(screen_text, NULL, &pixels, &pitch);
-                    printf("%d, %s\n", ss, SDL_GetError());}
+                    {
+                        printf("Locking texture\n");
+                        int ss = SDL_LockTexture(screen_text, NULL, &pixels, &pitch);
+                        printf("%d, %s\n", ss, SDL_GetError());
+                    }
                     else
+                    {
+                        printf("Unlocking texture\n");
                         SDL_UnlockTexture(screen_text);
+                        printf("%s\n", SDL_GetError());
+                    }
                     toggle=!toggle;
                 }
         }
         SDL_SetRenderDrawColorFloat(ren,0,0,0,1);
         SDL_RenderClear(ren);
         Uint64 start=SDL_GetTicksNS();
+        SDL_LockTexture(screen_text, NULL, &pixels, &pitch);
         for(int i=0; i < height; ++i)
         {
             for(int j=0; j < width; ++j)
@@ -96,7 +103,9 @@ int main(int argc, char** argv)
                 h+=1./(width*height)*2*M_PI;               
             }
         }
-        h=0;
+        static int i=0;
+        h=i++*0.05;
+        SDL_UnlockTexture(screen_text);
         SDL_UpdateTexture(screen_text, NULL, pixels, 4*width);
         SDL_RenderTexture(ren, screen_text, NULL, NULL);
         Uint64 end=SDL_GetTicksNS();
