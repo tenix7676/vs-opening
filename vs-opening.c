@@ -53,6 +53,8 @@ int main(int argc, char** argv)
     Uint64 sum=0;
     int it=1;
     SDL_Surface* screen_surf = SDL_GetWindowSurface(win);
+    unsigned char* pixels = screen_surf->pixels;
+    int pitch = screen_surf->pitch;
     float L=.9;
     float C=0.125;
     float h=0.0;
@@ -72,7 +74,10 @@ int main(int argc, char** argv)
             {
                 Lab lab = {L,C*cos(h),C*sin(h)};
                 RGB rgb = oklab_to_linear_srgb(lab);
-                SDL_WriteSurfacePixelFloat(screen_surf, j, i,rgb.r,rgb.g,rgb.b,1);
+                pixels[i*pitch+4*j+0]=fmin(255,rgb.b*255.);
+                pixels[i*pitch+4*j+1]=fmin(255,rgb.g*255.);
+                pixels[i*pitch+4*j+2]=fmin(255,rgb.r*255.);
+                pixels[i*pitch+4*j+3]=420;
                 h+=1./(width*height)*2*M_PI;               
             }
         }
