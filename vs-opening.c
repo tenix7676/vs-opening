@@ -53,10 +53,11 @@ int main(int argc, char** argv)
     int it=1;
     SDL_Texture* screen_text=SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, width, height);
     unsigned char* pixels = malloc(4*width*height*sizeof(char));
+    int pitch = 4*width;
     float L=.9;
     float C=0.125;
     float h=0.0;
-
+    bool toggle=true;
     while(true)
     {
         SDL_Event e;
@@ -64,6 +65,17 @@ int main(int argc, char** argv)
         {
             if(e.type == SDL_EVENT_QUIT)
                 return 0;
+            if(e.type == SDL_EVENT_KEY_DOWN)
+                if(e.key.key == SDLK_SPACE)
+                {
+                    if(toggle)
+                    {printf("Locking texture\n");
+                    int ss = SDL_LockTexture(screen_text, NULL, &pixels, &pitch);
+                    printf("%d, %s\n", ss, SDL_GetError());}
+                    else
+                        SDL_UnlockTexture(screen_text);
+                    toggle=!toggle;
+                }
         }
         SDL_SetRenderDrawColorFloat(ren,0,0,0,1);
         SDL_RenderClear(ren);
