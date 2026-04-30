@@ -184,12 +184,16 @@ void turn_camera(float left_right,float up_down)
     float radius=hypotf(cam_dir.z, len_cam_dir_xy);
     float ang0=atan2f(cam_dir.z,len_cam_dir_xy);
     float ang1=ang0+turning_speed*up_down;
-    cam_dir.z=radius*sinf(ang1);
-    cam_dir.x=radius*cosf(ang1);
-    cam_dir.y=radius*cosf(ang1);
+    // cam_dir.z=radius*sinf(ang1);
+    // cam_dir.x=radius*cosf(ang1);
+    // cam_dir.y=radius*cosf(ang1);
 
-    // ang0=atan2f(cam_dir.y,cam_dir.x);
-    // ang1=ang0+turning_speed*left_right;
-    // cam_dir.y=len_cam_dir_xy*sinf(ang1);
-    // cam_dir.x=len_cam_dir_xy*cosf(ang1);
+    ang0=atan2f(cam_dir.y,cam_dir.x);
+    ang1=ang0+turning_speed*left_right;
+    cam_dir.y=len_cam_dir_xy*sinf(ang1);
+    cam_dir.x=len_cam_dir_xy*cosf(ang1);
+    //i guess this proves the rasterizer is fucked...
+    //fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuck.
+    printf("%f, %f, %f\n",calc_normalised(cam_dir).x,calc_normalised(cam_dir).y,calc_normalised(cam_dir).z);
+    printf("len %f\n",length(cam_dir));
 }
