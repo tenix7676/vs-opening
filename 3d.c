@@ -183,9 +183,11 @@ void turn_camera(float left_right,float up_down)
     float ang0=atan2f(cam_dir.z,len_cam_dir_xy);
     float ang1=ang0-.5*turning_speed*up_down;
     cam_dir.z=radius*sinf(ang1);
-    cam_dir.x=radius*cosf(ang1);
-    cam_dir.y=radius*cosf(ang1);
-
+    // cam_dir.x=radius*cosf(ang1);
+    // cam_dir.y=radius*cosf(ang1);
+    
+    normalise(&cam_dir);
+    
     ang0=atan2f(cam_dir.y,cam_dir.x);
     ang1=ang0+turning_speed*left_right;
     // cam_dir.y=len_cam_dir_xy*sinf(ang1);
