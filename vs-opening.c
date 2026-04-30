@@ -27,28 +27,25 @@ int main(int argc, char** argv)
     points = malloc(point_count*sizeof(Point3d));
     init_points(points, point_count);
     
-    float mousex_vel,mousey_vel;
-    
     while(true)
     {
         SDL_Event e;
-        //reset mouse vel
-        mousex_vel=0; mousey_vel=0;
         while(SDL_PollEvent(&e))
         {
             if(e.type == SDL_EVENT_QUIT)
                 return 0;
             if(e.type == SDL_EVENT_MOUSE_MOTION)
+                turn_camera(e.motion.xrel,e.motion.yrel);
+            if(e.type == SDL_EVENT_KEY_DOWN)
             {
-                mousex_vel=e.motion.xrel;
-                mousey_vel=e.motion.yrel;
+                
             }
         }
         Uint64 start=SDL_GetTicksNS();
         SDL_ClearSurface(screen_surf,0.5,0.5,0.5,1);
         draw_screen(pixels, pitch, points, point_count);
         SDL_UpdateWindowSurface(win);
-        turn_camera(mousex_vel,mousey_vel);
+
         SDL_Delay(30);
         Uint64 end=SDL_GetTicksNS();
         sum+=end-start;

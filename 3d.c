@@ -15,7 +15,8 @@ Point3d scr_pos;
 int s_h,s_w;
 float v_w, v_h;
 Point3d s_y, s_x;
-size_t point_count=21;
+#define bitch 12
+size_t point_count=bitch*(bitch+1)/2;
 Point3d* points=NULL;
 
 void init_3d(int s_w_, int s_h_)
@@ -176,22 +177,21 @@ void draw_screen(unsigned char* pixels, int pitch, Point3d* points, size_t point
 }
 void turn_camera(float left_right,float up_down)
 {
-    const float turning_speed=.01;
+    const float turning_speed=-.01;
     Point3d cam_dir_xy=(Point3d){cam_dir.x,cam_dir.y,0};
     float len_cam_dir_xy=hypotf(cam_dir.x,cam_dir.y);
     float radius=hypotf(cam_dir.z, len_cam_dir_xy);
     float ang0=atan2f(cam_dir.z,len_cam_dir_xy);
-    float ang1=ang0-.5*turning_speed*up_down;
+    float ang1=ang0+v_h/v_w*turning_speed*up_down;
     cam_dir.z=radius*sinf(ang1);
-    // cam_dir.x=radius*cosf(ang1);
-    // cam_dir.y=radius*cosf(ang1);
-    
-    normalise(&cam_dir);
+    normalise(&cam_dir_xy);
+    cam_dir.x=radius*cosf(ang1)*cam_dir_xy.x;
+    cam_dir.y=radius*cosf(ang1)*cam_dir_xy.y;
     
     ang0=atan2f(cam_dir.y,cam_dir.x);
     ang1=ang0+turning_speed*left_right;
-    // cam_dir.y=len_cam_dir_xy*sinf(ang1);
-    // cam_dir.x=len_cam_dir_xy*cosf(ang1);
+    cam_dir.y=len_cam_dir_xy*sinf(ang1);
+    cam_dir.x=len_cam_dir_xy*cosf(ang1);
     
     update_s_y_s_x(); //guess i just forgor this lol
 }
