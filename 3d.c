@@ -176,24 +176,20 @@ void draw_screen(unsigned char* pixels, int pitch, Point3d* points, size_t point
 }
 void turn_camera(float left_right,float up_down)
 {
-    //idfk if this is fucked or the rasterizing code .,.
-    //propably this cuz i whiffed it out my ass
     const float turning_speed=.01;
     Point3d cam_dir_xy=(Point3d){cam_dir.x,cam_dir.y,0};
     float len_cam_dir_xy=hypotf(cam_dir.x,cam_dir.y);
     float radius=hypotf(cam_dir.z, len_cam_dir_xy);
     float ang0=atan2f(cam_dir.z,len_cam_dir_xy);
-    float ang1=ang0+turning_speed*up_down;
-    // cam_dir.z=radius*sinf(ang1);
-    // cam_dir.x=radius*cosf(ang1);
-    // cam_dir.y=radius*cosf(ang1);
+    float ang1=ang0-.5*turning_speed*up_down;
+    cam_dir.z=radius*sinf(ang1);
+    cam_dir.x=radius*cosf(ang1);
+    cam_dir.y=radius*cosf(ang1);
 
     ang0=atan2f(cam_dir.y,cam_dir.x);
     ang1=ang0+turning_speed*left_right;
-    cam_dir.y=len_cam_dir_xy*sinf(ang1);
-    cam_dir.x=len_cam_dir_xy*cosf(ang1);
-    //i guess this proves the rasterizer is fucked...
-    //fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuck.
-    printf("%f, %f, %f\n",calc_normalised(cam_dir).x,calc_normalised(cam_dir).y,calc_normalised(cam_dir).z);
-    printf("len %f\n",length(cam_dir));
+    // cam_dir.y=len_cam_dir_xy*sinf(ang1);
+    // cam_dir.x=len_cam_dir_xy*cosf(ang1);
+    
+    update_s_y_s_x(); //guess i just forgor this lol
 }

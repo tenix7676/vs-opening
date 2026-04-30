@@ -48,7 +48,6 @@ int main(int argc, char** argv)
         SDL_ClearSurface(screen_surf,0.5,0.5,0.5,1);
         draw_screen(pixels, pitch, points, point_count);
         SDL_UpdateWindowSurface(win);
-        printf("%f, %f\n",mousex_vel, mousey_vel);
         turn_camera(mousex_vel,mousey_vel);
         SDL_Delay(30);
         Uint64 end=SDL_GetTicksNS();
