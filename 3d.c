@@ -1,0 +1,195 @@
+#include <math.h>
+#define M_PI        3.14159265358979323846
+#include "3d.h"
+#include "oklab.h"
+
+void update_scr_pos(Point3d cam_pos);
+void update_cam_pos(Point3d scr_pos);
+void update_s_y_s_x(void);
+void normalise(Point3d*);
+
+int cam_dist;
+Point3d cam_dir;
+Point3d cam_pos;
+Point3d scr_pos;
+int s_h,s_w;
+float v_w, v_h;
+Point3d s_y, s_x;
+size_t point_count=21;
+Point3d* points=NULL;
+
+void init_3d(int s_w_, int s_h_)
+{
+    cam_dist=1;4354/2.1;
+    cam_dir=(Point3d){1,1,-.5};
+    normalise(&cam_dir);
+    scr_pos=(Point3d){-2,-2,2};
+    update_cam_pos(scr_pos);
+    s_h=s_h_;s_w=s_w_;
+    v_w=1;
+    v_h=(float)s_h/s_w*v_w;
+    update_s_y_s_x();
+    printf("%f\n",v_h);
+}
+void update_scr_pos(Point3d cam_pos_)
+{
+    cam_pos = cam_pos_;
+    scr_pos.x = cam_pos.x + cam_dist * cam_dir.x;
+    scr_pos.y = cam_pos.y + cam_dist * cam_dir.y;
+    scr_pos.z = cam_pos.z + cam_dist * cam_dir.z;
+}
+void update_cam_pos(Point3d scr_pos_)
+{
+    scr_pos = scr_pos_;
+    cam_pos.x = scr_pos.x - cam_dist * cam_dir.x;
+    cam_pos.y = scr_pos.y - cam_dist * cam_dir.y;
+    cam_pos.z = scr_pos.z - cam_dist * cam_dir.z;
+}
+float dot(Point3d a, Point3d b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+float length(Point3d a)
+{
+    return sqrtf(dot(a,a));
+}
+Point3d calc_normalised(Point3d a)
+{
+    Point3d norm = a;
+    float len = length(a);
+    norm.x /= len;
+    norm.y /= len;
+    norm.z /= len;
+    return norm;
+}
+void normalise(Point3d* a)
+{
+    float len = length(*a);
+    a->x /= len;
+    a->y /= len;
+    a->z /= len;
+}
+void update_s_y_s_x()
+{
+    s_x=(Point3d){cam_dir.y, -cam_dir.x, 0};
+    normalise(&s_x);
+    Point3d cam_dir_xy={cam_dir.x, cam_dir.y, 0};
+    float len_cam_dir_xy=hypotf(cam_dir.x, cam_dir.y);
+    normalise(&cam_dir_xy);
+    s_y.x=cam_dir.z * cam_dir_xy.x;
+    s_y.y=cam_dir.z * cam_dir_xy.y;
+    s_y.z=-len_cam_dir_xy;
+    normalise(&s_y);
+}
+
+void init_points(Point3d* points, size_t point_count)
+{
+    //the x+ y+ plane
+    int n=0;
+    for(int i=0; 1; ++i)
+    {
+        for(int j=0; j<=i; ++j)
+        {
+            if(n == point_count)
+                return;
+            points[n].x=j;
+            points[n].y=i-j;
+            points[n].z=0;
+            // printf("x,y,z:%f,%f,%f\n",points[n].x,points[n].y,points[n].z);
+            n++;
+        }
+    }
+}
+void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
+{
+    pixels[y*pitch+4*x+0]=b;
+    pixels[y*pitch+4*x+1]=g;
+    pixels[y*pitch+4*x+2]=r;
+    //pixels[y*pitch+4*x+3]=420;
+}
+int check_point(Point3d* point, int* sex, int* sey)
+{
+    Point3d p={
+    point->x - cam_pos.x,
+    point->y - cam_pos.y,
+    point->z - cam_pos.z
+    };
+
+    float len_p1 = dot(p, cam_dir);
+    //check if behind of screen plane
+    if(len_p1 <= cam_dist)
+        return 0;
+    
+    float len_p2 = dot(p,s_x);
+    float sex_ = len_p2 / len_p1 * cam_dist / v_w * s_w/2;
+    *sex = sex_;
+    *sex += s_w/2;
+    //check if out of screen
+    if(!(*sex >= 0 && *sex < s_w))
+       return 0;
+    
+    len_p2 = dot(p,s_y);
+    float sey_ = len_p2 / len_p1 * cam_dist / v_h * s_h/2;
+    *sey = sey_;
+    *sey += s_h/2;
+    //check if out of screen
+    if(!(*sey >= 0 && *sey < s_h))
+       return 0;
+
+    return 1;
+}
+void draw_screen(unsigned char* pixels, int pitch, Point3d* points, size_t point_count)
+{
+    static float L=.9;
+    static float C=0.125;
+    static float h=0.0;
+
+    //Just in case
+    normalise(&cam_dir);
+    normalise(&s_x);
+    normalise(&s_y);
+    for(size_t i=0; i < point_count; ++i)
+    {
+        h+=1.003/(point_count)*2*M_PI;
+
+        int sex, sey;
+        if(check_point(points+i,&sex,&sey))
+        {
+            Lab lab = {L,C*cos(h),C*sin(h)};
+            RGB rgb = oklab_to_linear_srgb(lab);
+            for(int i=-4; i<4;++i)
+                for(int j=-4; j<4; ++j)
+                {
+                    if((sey+i >= 0 && sey+i < s_h))
+                    if((sex+j >= 0 && sex+j < s_w))
+                    {
+
+                    draw_pixel(pixels, pitch, sex+j, sey+i,
+                    fmin(255,rgb.r*255),
+                    fmin(255,rgb.g*255),
+                    fmin(255,rgb.b*255) );
+
+                    }
+                }
+        }
+    }
+}
+void turn_camera(float left_right,float up_down)
+{
+    //idfk if this is fucked or the rasterizing code .,.
+    //propably this cuz i whiffed it out my ass
+    const float turning_speed=.01;
+    Point3d cam_dir_xy=(Point3d){cam_dir.x,cam_dir.y,0};
+    float len_cam_dir_xy=hypotf(cam_dir.x,cam_dir.y);
+    float radius=hypotf(cam_dir.z, len_cam_dir_xy);
+    float ang0=atan2f(cam_dir.z,len_cam_dir_xy);
+    float ang1=ang0+turning_speed*up_down;
+    cam_dir.z=radius*sinf(ang1);
+    cam_dir.x=radius*cosf(ang1);
+    cam_dir.y=radius*cosf(ang1);
+
+    // ang0=atan2f(cam_dir.y,cam_dir.x);
+    // ang1=ang0+turning_speed*left_right;
+    // cam_dir.y=len_cam_dir_xy*sinf(ang1);
+    // cam_dir.x=len_cam_dir_xy*cosf(ang1);
+}

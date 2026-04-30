@@ -1,0 +1,1 @@
+cl vs-opening.c 3d.c oklab.c /I. /link /defaultlib:sdl3 && vs-opening.exe
