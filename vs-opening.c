@@ -6,6 +6,17 @@
 #include "SDL3/SDL_main.h"
 #include "oklab.h"
 
+typedef struct Button
+{
+    int down;
+    int held;
+    int up;
+} Button;
+
+#define PLENTY 32
+Button buttons[PLENTY];
+
+
 int main(int argc, char** argv)
 {
     SDL_Window* win;
@@ -38,10 +49,34 @@ int main(int argc, char** argv)
                 turn_camera(e.motion.xrel,e.motion.yrel);
             if(e.type == SDL_EVENT_KEY_DOWN)
             {
-                
+                int i=0;
+                if(e.key.key == SDLK_W) { buttons[i].held=1; buttons[i].down=1; } ++i;
+                if(e.key.key == SDLK_S) { buttons[i].held=1; buttons[i].down=1; } ++i;
+                if(e.key.key == SDLK_D) { buttons[i].held=1; buttons[i].down=1; } ++i;
+                if(e.key.key == SDLK_A) { buttons[i].held=1; buttons[i].down=1; } ++i;
+                if(e.key.key == SDLK_SPACE) { buttons[i].held=1; buttons[i].down=1; } ++i;
+                if(e.key.key == SDLK_LSHIFT) { buttons[i].held=1; buttons[i].down=1; } ++i;
+            }
+            if(e.type == SDL_EVENT_KEY_UP)
+            {
+                int i=0;
+                if(e.key.key == SDLK_W) { buttons[i].held=0; buttons[i].up=1; } ++i;
+                if(e.key.key == SDLK_S) { buttons[i].held=0; buttons[i].up=1; } ++i;
+                if(e.key.key == SDLK_D) { buttons[i].held=0; buttons[i].up=1; } ++i;
+                if(e.key.key == SDLK_A) { buttons[i].held=0; buttons[i].up=1; } ++i;
+                if(e.key.key == SDLK_SPACE) { buttons[i].held=0; buttons[i].up=1; } ++i;
+                if(e.key.key == SDLK_LSHIFT) { buttons[i].held=0; buttons[i].up=1; } ++i;
             }
         }
         Uint64 start=SDL_GetTicksNS();
+        int i=0;
+        if(buttons[i].held) { move_camera(.1); } ++i;
+        if(buttons[i].held) { move_camera(-.1); } ++i;
+        if(buttons[i].held) { strafe_camera(.1); } ++i;
+        if(buttons[i].held) { strafe_camera(-.1); } ++i;
+        if(buttons[i].held) { fly_camera(.1); } ++i;
+        if(buttons[i].held) { fly_camera(-.1); } ++i;
+        
         SDL_ClearSurface(screen_surf,0.5,0.5,0.5,1);
         draw_screen(pixels, pitch, points, point_count);
         SDL_UpdateWindowSurface(win);

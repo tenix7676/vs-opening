@@ -7,8 +7,6 @@ typedef struct Point3d
     float x,y,z;
 } Point3d;
 
-void update_scr_pos(Point3d cam_pos);
-void update_cam_pos(Point3d scr_pos);
 void update_s_y_s_x(void);
 
 Point3d cam_pos;
@@ -25,4 +23,7 @@ void init_3d(int s_w_, int s_h_);
 void init_points(Point3d* points, size_t point_count);
 void draw_screen(unsigned char* pixels, int pitch, Point3d* points, size_t point_count);
 void turn_camera(float left_right,float up_down);
+void move_camera(float dist);
+void fly_camera(float dist);
+void strafe_camera(float dist);
 #endif

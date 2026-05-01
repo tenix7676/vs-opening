@@ -3,15 +3,24 @@
 #include "3d.h"
 #include "oklab.h"
 
-void update_scr_pos(Point3d cam_pos);
-void update_cam_pos(Point3d scr_pos);
+void update_scr_pos();
+void update_cam_pos();
 void update_s_y_s_x(void);
 void normalise(Point3d*);
 
 int cam_dist;
 Point3d cam_dir;
 Point3d cam_pos;
-Point3d scr_pos;
+Point3d scr_pos; 
+//the closer the screen, i mean virutal world viewport is to the camera
+// the closer i can get to a 3d point without it disappearing 
+// (because it goes behind the screen)
+// but i guess checking if a point goes behind the camera
+// instead of if it goes behind the screen also works great
+//#define RENDER_IN_FRONT_OF_CAMERA
+#ifndef RENDER_IN_FRONT_OF_CAMERA
+#define RENDER_IN_FRONT_OF_SCREEN
+#endif
 int s_h,s_w;
 float v_w, v_h;
 Point3d s_y, s_x;
@@ -32,16 +41,14 @@ void init_3d(int s_w_, int s_h_)
     update_s_y_s_x();
     printf("%f\n",v_h);
 }
-void update_scr_pos(Point3d cam_pos_)
+void update_scr_pos()
 {
-    cam_pos = cam_pos_;
     scr_pos.x = cam_pos.x + cam_dist * cam_dir.x;
     scr_pos.y = cam_pos.y + cam_dist * cam_dir.y;
     scr_pos.z = cam_pos.z + cam_dist * cam_dir.z;
 }
-void update_cam_pos(Point3d scr_pos_)
+void update_cam_pos()
 {
-    scr_pos = scr_pos_;
     cam_pos.x = scr_pos.x - cam_dist * cam_dir.x;
     cam_pos.y = scr_pos.y - cam_dist * cam_dir.y;
     cam_pos.z = scr_pos.z - cam_dist * cam_dir.z;
@@ -117,9 +124,16 @@ int check_point(Point3d* point, int* sex, int* sey)
     };
 
     float len_p1 = dot(p, cam_dir);
+    #ifdef RENDER_IN_FRONT_OF_CAMERA
+    //check if behind of camera plane
+    if(len_p1 <= 0)
+        return 0;
+    #endif
+    #ifdef RENDER_IN_FRONT_OF_SCREEN
     //check if behind of screen plane
     if(len_p1 <= cam_dist)
         return 0;
+    #endif
     
     float len_p2 = dot(p,s_x);
     float sex_ = len_p2 / len_p1 * cam_dist / v_w * s_w/2;
@@ -194,4 +208,23 @@ void turn_camera(float left_right,float up_down)
     cam_dir.x=len_cam_dir_xy*cosf(ang1);
     
     update_s_y_s_x(); //guess i just forgor this lol
+}
+void move_camera(float dist)
+{
+    cam_pos.x+=dist*cam_dir.x;
+    cam_pos.y+=dist*cam_dir.y;
+    cam_pos.z+=dist*cam_dir.z;
+    update_scr_pos();
+}
+void fly_camera(float dist)
+{
+    cam_pos.z+=dist;
+    update_scr_pos();
+}
+void strafe_camera(float dist)
+{
+    cam_pos.x+=dist*s_x.x;
+    cam_pos.y+=dist*s_x.y;
+    cam_pos.z+=dist*s_x.z;
+    update_scr_pos();
 }
