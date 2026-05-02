@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 #include "3d.h"
 #define M_PI        3.14159265358979323846
 #include "SDL3/SDL.h"
+#undef main
 #include "SDL3/SDL_main.h"
 #include "oklab.h"
 
@@ -16,30 +18,40 @@ typedef struct Button
 #define PLENTY 32
 Button buttons[PLENTY];
 
+void reset_buttons()
+{
+    int i=0;
+    while(i < PLENTY)
+    {
+        buttons[i].down=0; buttons[i].up=0;
+        ++i;
+    }
+}
 
-int main(int argc, char** argv)
+
+int main(int argc, char* argv[])
 {
     SDL_Window* win;
-    win = SDL_CreateWindow("vs-opening",690, 420, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN));
+    win = SDL_CreateWindow("vs-opening",690, 420, 0&SDL_WINDOW_BORDERLESS | (-1&SDL_WINDOW_FULLSCREEN));
     SDL_SetWindowRelativeMouseMode(win,1);
     int width, height;
     SDL_GetWindowSize(win, &width, &height);
     Uint64 sum=0;
     int it=1;
     SDL_Surface* screen_surf = SDL_GetWindowSurface(win);
-    unsigned char* pixels = screen_surf->pixels;
-    int pitch = screen_surf->pitch;
     float L=.9;
     float C=0.125;
     float h=0.0;
-    init_3d(width, height);
-    printf("%f\n",v_h);
-    free(points);
-    points = malloc(point_count*sizeof(Point3d));
-    init_points(points, point_count);
     
+    #define bitch 256
+    Point3d* points=NULL;
+    size_t point_count=bitch*(bitch+1)/2;
+    init_3d(width, height, &points, point_count);
+
+    Uint64 start,end,delta=0;
     while(true)
     {
+        start=SDL_GetTicksNS();
         SDL_Event e;
         while(SDL_PollEvent(&e))
         {
@@ -68,7 +80,7 @@ int main(int argc, char** argv)
                 if(e.key.key == SDLK_LSHIFT) { buttons[i].held=0; buttons[i].up=1; } ++i;
             }
         }
-        Uint64 start=SDL_GetTicksNS();
+
         int i=0;
         if(buttons[i].held) { move_camera(.1); } ++i;
         if(buttons[i].held) { move_camera(-.1); } ++i;
@@ -76,14 +88,13 @@ int main(int argc, char** argv)
         if(buttons[i].held) { strafe_camera(-.1); } ++i;
         if(buttons[i].held) { fly_camera(.1); } ++i;
         if(buttons[i].held) { fly_camera(-.1); } ++i;
+        reset_buttons();
         
         SDL_ClearSurface(screen_surf,0.5,0.5,0.5,1);
-        draw_screen(pixels, pitch, points, point_count);
+        draw_screen_one_color(screen_surf, points, point_count);
         SDL_UpdateWindowSurface(win);
 
-        SDL_Delay(30);
-        Uint64 end=SDL_GetTicksNS();
-        sum+=end-start;
+        sum+=delta;
         if(it>=10)
         {
             printf("avg: %.3fms\n",SDL_NS_TO_MS(sum/(float)it));
@@ -91,7 +102,11 @@ int main(int argc, char** argv)
             sum=0;
         }
         it++;
+        end=SDL_GetTicksNS();
+        delta = end-start;
+        SDL_DelayNS(10'000'000-delta); //100fps
     }
 
     return 0;
 }
+    

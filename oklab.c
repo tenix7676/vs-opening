@@ -1,4 +1,5 @@
 #include "oklab.h"
+#include <math.h>
 
 Lab linear_srgb_to_oklab(RGB c)
 {

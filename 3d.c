@@ -1,4 +1,6 @@
+#include "SDL3/SDL.h"
 #include <math.h>
+#include <stdlib.h>
 #define M_PI        3.14159265358979323846
 #include "3d.h"
 #include "oklab.h"
@@ -17,29 +19,31 @@ Point3d scr_pos;
 // (because it goes behind the screen)
 // but i guess checking if a point goes behind the camera
 // instead of if it goes behind the screen also works great
-//#define RENDER_IN_FRONT_OF_CAMERA
+#define RENDER_IN_FRONT_OF_CAMERA
 #ifndef RENDER_IN_FRONT_OF_CAMERA
 #define RENDER_IN_FRONT_OF_SCREEN
 #endif
 int s_h,s_w;
 float v_w, v_h;
 Point3d s_y, s_x;
-#define bitch 12
-size_t point_count=bitch*(bitch+1)/2;
-Point3d* points=NULL;
 
-void init_3d(int s_w_, int s_h_)
+SDL_Rect* rects = NULL;
+
+void init_3d(int s_w_, int s_h_, Point3d** points, int point_count)
 {
-    cam_dist=1;4354/2.1;
+    s_h=s_h_;s_w=s_w_;
+    v_w=1;
+    v_h=(float)s_h/s_w*v_w;
+    cam_dist=v_w*55/34.5;
     cam_dir=(Point3d){1,1,-.5};
     normalise(&cam_dir);
     scr_pos=(Point3d){-2,-2,2};
     update_cam_pos(scr_pos);
-    s_h=s_h_;s_w=s_w_;
-    v_w=1;
-    v_h=(float)s_h/s_w*v_w;
     update_s_y_s_x();
-    printf("%f\n",v_h);
+    
+    *points = malloc(point_count*sizeof(Point3d));
+    init_points(*points, point_count);
+    rects = malloc(sizeof(SDL_Rect)*point_count);
 }
 void update_scr_pos()
 {
@@ -115,7 +119,7 @@ void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,
     pixels[y*pitch+4*x+2]=r;
     //pixels[y*pitch+4*x+3]=420;
 }
-int check_point(Point3d* point, int* sex, int* sey)
+float check_point(Point3d* point, int* sex, int* sey)
 {
     Point3d p={
     point->x - cam_pos.x,
@@ -124,14 +128,14 @@ int check_point(Point3d* point, int* sex, int* sey)
     };
 
     float len_p1 = dot(p, cam_dir);
-    #ifdef RENDER_IN_FRONT_OF_CAMERA
-    //check if behind of camera plane
-    if(len_p1 <= 0)
-        return 0;
-    #endif
     #ifdef RENDER_IN_FRONT_OF_SCREEN
     //check if behind of screen plane
     if(len_p1 <= cam_dist)
+        return 0;
+    #endif
+    #ifdef RENDER_IN_FRONT_OF_CAMERA
+    //check if behind of camera plane
+    if(len_p1 <= 0)
         return 0;
     #endif
     
@@ -151,47 +155,66 @@ int check_point(Point3d* point, int* sex, int* sey)
     if(!(*sey >= 0 && *sey < s_h))
        return 0;
 
-    return 1;
+    return len_p1;
 }
-void draw_screen(unsigned char* pixels, int pitch, Point3d* points, size_t point_count)
+#define DIST_SCALING 128
+void draw_screen(SDL_Surface* surface, Point3d* points, size_t point_count)
 {
     static float L=.9;
     static float C=0.125;
-    static float h=0.0;
-
+    static double h=0.0;
+    
     //Just in case
     normalise(&cam_dir);
     normalise(&s_x);
     normalise(&s_y);
     for(size_t i=0; i < point_count; ++i)
     {
-        h+=1.003/(point_count)*2*M_PI;
+        h+=1.006/(point_count)*2*M_PI;
 
         int sex, sey;
-        if(check_point(points+i,&sex,&sey))
+        float len_p1 = check_point(points+i,&sex,&sey);
+        if(len_p1 > 0)
         {
             Lab lab = {L,C*cos(h),C*sin(h)};
             RGB rgb = oklab_to_linear_srgb(lab);
-            for(int i=-4; i<4;++i)
-                for(int j=-4; j<4; ++j)
-                {
-                    if((sey+i >= 0 && sey+i < s_h))
-                    if((sex+j >= 0 && sex+j < s_w))
-                    {
-
-                    draw_pixel(pixels, pitch, sex+j, sey+i,
-                    fmin(255,rgb.r*255),
-                    fmin(255,rgb.g*255),
-                    fmin(255,rgb.b*255) );
-
-                    }
-                }
+            SDL_Color color = (SDL_Color){
+                fmin(255,rgb.b*255),
+                fmin(255,rgb.g*255),
+                fmin(255,rgb.r*255) };
+            float rect_radius=DIST_SCALING/len_p1;
+            const SDL_Rect rect=(SDL_Rect){sex-rect_radius,sey-rect_radius,fmax(1,rect_radius),fmax(1,rect_radius)};
+            SDL_FillSurfaceRect(surface, &rect, *(Uint32*)(void*)&color);
         }
     }
 }
+
+void draw_screen_one_color(SDL_Surface* surface, Point3d* points, size_t point_count)
+{
+    //Just in case
+    normalise(&cam_dir);
+    normalise(&s_x);
+    normalise(&s_y);
+    int num_rects_this_frame=0;
+    for(size_t i=0; i < point_count; ++i)
+    {
+        int sex, sey;
+        float len_p1 = check_point(points+i,&sex,&sey);
+        if(len_p1 > 0)
+        {
+            float rect_radius=DIST_SCALING/len_p1;//powf(len_p1,.85);
+            const SDL_Rect rect=(SDL_Rect){sex-rect_radius,sey-rect_radius,fmax(1,rect_radius),fmax(1,rect_radius)};
+            rects[num_rects_this_frame] = rect;
+            num_rects_this_frame++;
+        }
+    }
+    SDL_Color color = (SDL_Color){ 255, 255, 255 };
+    SDL_FillSurfaceRects(surface, rects, num_rects_this_frame, *(Uint32*)(void*)&color);
+}
 void turn_camera(float left_right,float up_down)
 {
-    const float turning_speed=-.01;
+    //its annoying to look straight down, propably could fix it with some if
+    const float turning_speed=-1/256.;
     Point3d cam_dir_xy=(Point3d){cam_dir.x,cam_dir.y,0};
     float len_cam_dir_xy=hypotf(cam_dir.x,cam_dir.y);
     float radius=hypotf(cam_dir.z, len_cam_dir_xy);
