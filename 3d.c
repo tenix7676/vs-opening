@@ -27,23 +27,23 @@ int s_h,s_w;
 float v_w, v_h;
 Point3d s_y, s_x;
 
+size_t point_count=0;
+Point3d* points=NULL;
 SDL_Rect* rects = NULL;
 
-void init_3d(int s_w_, int s_h_, Point3d** points, int point_count)
+void init_3d(int s_w_, int s_h_)
 {
     s_h=s_h_;s_w=s_w_;
     v_w=1;
     v_h=(float)s_h/s_w*v_w;
     cam_dist=v_w*55/34.5;
-    cam_dir=(Point3d){1,1,-.5};
+    cam_dir=(Point3d){-1,0,-.25};
     normalise(&cam_dir);
-    scr_pos=(Point3d){-2,-2,2};
+    scr_pos=(Point3d){1,0,1};
     update_cam_pos(scr_pos);
     update_s_y_s_x();
     
-    *points = malloc(point_count*sizeof(Point3d));
-    init_points(*points, point_count);
-    rects = malloc(sizeof(SDL_Rect)*point_count);
+    init_points();
 }
 void update_scr_pos()
 {
@@ -94,23 +94,49 @@ void update_s_y_s_x()
     normalise(&s_y);
 }
 
-void init_points(Point3d* points, size_t point_count)
+float f(float x)
 {
-    //the x+ y+ plane
+    return 2*expf(-x*x)-6*expf(-(x-2)*(x-2));
+}
+float g(float t)
+{
+    if(t>=0) return  2*powf(fabs(t),2.1);
+    else     return -2*powf(fabs(t),2.1);
+}
+void init_points()
+{
+    
     int n=0;
-    for(int i=0; 1; ++i)
+    const int points_around=400;
+    const int points_per_line=40;
+    point_count=points_around*points_per_line;
+    points = malloc(point_count*sizeof(Point3d));
+    rects = malloc(sizeof(SDL_Rect)*point_count);
+    for(int i=0; i<points_around; ++i)
     {
-        for(int j=0; j<=i; ++j)
+        const float R=1;
+        float t = -.5 + i*1./(points_around-1);
+        t=g(t);
+        Point3d P;
+        P.x=R*cosf(2*M_PI*t);
+        P.y=R*sinf(2*M_PI*t);
+        
+        P.z=.1*f(2*M_PI*t*16)+.1*P.y;
+        
+        for(int j=0; j<points_per_line; ++j)
         {
-            if(n == point_count)
-                return;
-            points[n].x=j;
-            points[n].y=i-j;
-            points[n].z=0;
-            // printf("x,y,z:%f,%f,%f\n",points[n].x,points[n].y,points[n].z);
+            Point3d p = P;
+            const float max_length=8*R;
+            float d=5+(float)j/points_per_line * (max_length);
+            p.x*=d; 
+            p.y*=d;
+            p.z*=3*(sinf(d/3));
+            points[n]=p;
             n++;
+            if(n==point_count) return;
         }
     }
+
 }
 void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
 {
@@ -157,8 +183,8 @@ float check_point(Point3d* point, int* sex, int* sey)
 
     return len_p1;
 }
-#define DIST_SCALING 128
-void draw_screen(SDL_Surface* surface, Point3d* points, size_t point_count)
+#define DIST_SCALING 32
+void draw_screen(SDL_Surface* surface)
 {
     static float L=.9;
     static float C=0.125;
@@ -189,7 +215,7 @@ void draw_screen(SDL_Surface* surface, Point3d* points, size_t point_count)
     }
 }
 
-void draw_screen_one_color(SDL_Surface* surface, Point3d* points, size_t point_count)
+void draw_screen_one_color(SDL_Surface* surface)
 {
     //Just in case
     normalise(&cam_dir);

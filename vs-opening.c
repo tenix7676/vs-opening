@@ -43,10 +43,7 @@ int main(int argc, char* argv[])
     float C=0.125;
     float h=0.0;
     
-    #define bitch 256
-    Point3d* points=NULL;
-    size_t point_count=bitch*(bitch+1)/2;
-    init_3d(width, height, &points, point_count);
+    init_3d(width, height);
 
     Uint64 start,end,delta=0;
     while(true)
@@ -82,18 +79,17 @@ int main(int argc, char* argv[])
         }
 
         int i=0;
-        if(buttons[i].held) { move_camera(.1); } ++i;
-        if(buttons[i].held) { move_camera(-.1); } ++i;
-        if(buttons[i].held) { strafe_camera(.1); } ++i;
-        if(buttons[i].held) { strafe_camera(-.1); } ++i;
-        if(buttons[i].held) { fly_camera(.1); } ++i;
-        if(buttons[i].held) { fly_camera(-.1); } ++i;
+        if(buttons[i].held) { move_camera(.05); } ++i;
+        if(buttons[i].held) { move_camera(-.05); } ++i;
+        if(buttons[i].held) { strafe_camera(.05); } ++i;
+        if(buttons[i].held) { strafe_camera(-.05); } ++i;
+        if(buttons[i].held) { fly_camera(.05); } ++i;
+        if(buttons[i].held) { fly_camera(-.05); } ++i;
         reset_buttons();
         
         SDL_ClearSurface(screen_surf,0.5,0.5,0.5,1);
-        draw_screen_one_color(screen_surf, points, point_count);
+        draw_screen_one_color(screen_surf);
         SDL_UpdateWindowSurface(win);
-
         sum+=delta;
         if(it>=10)
         {
