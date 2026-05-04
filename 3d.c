@@ -96,47 +96,35 @@ void update_s_y_s_x()
 
 float f(float x)
 {
-    return 2*expf(-x*x)-6*expf(-(x-2)*(x-2));
-}
-float g(float t)
-{
-    if(t>=0) return  2*powf(fabs(t),2.1);
-    else     return -2*powf(fabs(t),2.1);
+    return expf(-pow(4*x,2));
 }
 void init_points()
 {
     
     int n=0;
-    const int points_around=400;
-    const int points_per_line=40;
+    float s=.1;
+    float r=4;
+    float R=4;
+    int points_around=2*M_PI*r/s;
+    const int points_per_line=1;
     point_count=points_around*points_per_line;
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
-    for(int i=0; i<points_around; ++i)
+    
+    //for now 1 circle
+    for(int i=-points_around/2; i<points_around-points_around/2; ++i)
     {
-        const float R=1;
-        float t = -.5 + i*1./(points_around-1);
-        t=g(t);
-        Point3d P;
-        P.x=R*cosf(2*M_PI*t);
-        P.y=R*sinf(2*M_PI*t);
-        
-        P.z=.1*f(2*M_PI*t*16)+.1*P.y;
-        
-        for(int j=0; j<points_per_line; ++j)
-        {
-            Point3d p = P;
-            const float max_length=8*R;
-            float d=5+(float)j/points_per_line * (max_length);
-            p.x*=d; 
-            p.y*=d;
-            p.z*=3*(sinf(d/3));
-            points[n]=p;
-            n++;
-            if(n==point_count) return;
-        }
+        Point3d p;
+        //lets do from -pi to pi
+        //float t=-M_PI+2*M_PI*i/(points_around-1);
+        float delta_t=s / r;
+        float t=i*delta_t;
+        p.x=r*cosf(t);
+        p.y=r*sinf(t);
+        p.z=0;
+        points[n]=p;
+        n++;
     }
-
 }
 void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
 {

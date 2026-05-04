@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
         if(buttons[i].held) { fly_camera(-.05); } ++i;
         reset_buttons();
         
-        SDL_ClearSurface(screen_surf,0.5,0.5,0.5,1);
+        SDL_ClearSurface(screen_surf,0,0,0,1);
         draw_screen_one_color(screen_surf);
         SDL_UpdateWindowSurface(win);
         sum+=delta;
