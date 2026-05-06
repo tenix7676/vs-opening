@@ -102,28 +102,37 @@ void init_points()
 {
     
     int n=0;
-    float s=.1;
-    float r=4;
+    float s=1;
+    float r1=0;
+    float diff=1;
+    float rn=7;
     float R=4;
-    int points_around=2*M_PI*r/s;
-    const int points_per_line=1;
-    point_count=points_around*points_per_line;
+    point_count=0;
+    for(float r=r1; r<=rn; r+=diff)
+    {
+        int points_around=2*M_PI*r/s + 1;
+        point_count+=points_around;
+    }
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
     
     //for now 1 circle
-    for(int i=-points_around/2; i<points_around-points_around/2; ++i)
+    for(float r=r1; r<=rn; r+=diff)
     {
+        int points_around=2*M_PI*r/s + 1;
+        
+        for(int i=-points_around/2; i<points_around-points_around/2; ++i)
+        {
         Point3d p;
-        //lets do from -pi to pi
-        //float t=-M_PI+2*M_PI*i/(points_around-1);
         float delta_t=s / r;
         float t=i*delta_t;
+        if(r==0) t=0;
         p.x=r*cosf(t);
         p.y=r*sinf(t);
         p.z=0;
         points[n]=p;
         n++;
+        }
     }
 }
 void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
