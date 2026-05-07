@@ -26,4 +26,5 @@ void turn_camera(float left_right,float up_down);
 void move_camera(float dist);
 void fly_camera(float dist);
 void strafe_camera(float dist);
+void print_scr_pos();
 #endif

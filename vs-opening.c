@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
             if(e.type == SDL_EVENT_KEY_DOWN)
             {
                 int i=0;
+                if(e.key.key == SDLK_P) { buttons[i].held=1; buttons[i].down=1; } ++i;
                 if(e.key.key == SDLK_W) { buttons[i].held=1; buttons[i].down=1; } ++i;
                 if(e.key.key == SDLK_S) { buttons[i].held=1; buttons[i].down=1; } ++i;
                 if(e.key.key == SDLK_D) { buttons[i].held=1; buttons[i].down=1; } ++i;
@@ -69,6 +70,7 @@ int main(int argc, char* argv[])
             if(e.type == SDL_EVENT_KEY_UP)
             {
                 int i=0;
+                if(e.key.key == SDLK_P) { buttons[i].held=0; buttons[i].up=1; } ++i;
                 if(e.key.key == SDLK_W) { buttons[i].held=0; buttons[i].up=1; } ++i;
                 if(e.key.key == SDLK_S) { buttons[i].held=0; buttons[i].up=1; } ++i;
                 if(e.key.key == SDLK_D) { buttons[i].held=0; buttons[i].up=1; } ++i;
@@ -77,14 +79,22 @@ int main(int argc, char* argv[])
                 if(e.key.key == SDLK_LSHIFT) { buttons[i].held=0; buttons[i].up=1; } ++i;
             }
         }
-
+        
+        {
         int i=0;
-        if(buttons[i].held) { move_camera(.05); } ++i;
-        if(buttons[i].held) { move_camera(-.05); } ++i;
-        if(buttons[i].held) { strafe_camera(.05); } ++i;
-        if(buttons[i].held) { strafe_camera(-.05); } ++i;
-        if(buttons[i].held) { fly_camera(.05); } ++i;
-        if(buttons[i].held) { fly_camera(-.05); } ++i;
+        if(buttons[i].down) { print_scr_pos(); } ++i;
+        }
+        {
+        int i=0;
+        i++;
+        const float flyinGspeed=0.006;
+        if(buttons[i].held) { move_camera(flyinGspeed); } ++i;
+        if(buttons[i].held) { move_camera(-flyinGspeed); } ++i;
+        if(buttons[i].held) { strafe_camera(flyinGspeed); } ++i;
+        if(buttons[i].held) { strafe_camera(-flyinGspeed); } ++i;
+        if(buttons[i].held) { fly_camera(flyinGspeed); } ++i;
+        if(buttons[i].held) { fly_camera(-flyinGspeed); } ++i;
+        }
         reset_buttons();
         
         SDL_ClearSurface(screen_surf,0,0,0,1);
