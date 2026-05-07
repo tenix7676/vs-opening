@@ -1,7 +1,8 @@
 #include "SDL3/SDL.h"
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdlib.h>
-#define M_PI        3.14159265358979323846
+#include <stdarg.h>
 #include "3d.h"
 #include "oklab.h"
 
@@ -29,7 +30,7 @@ Point3d s_y, s_x;
 
 size_t point_count=0;
 Point3d* points=NULL;
-SDL_Rect* rects = NULL;
+SDL_Rect* rects=NULL;
 
 void init_3d(int s_w_, int s_h_)
 {
@@ -37,9 +38,9 @@ void init_3d(int s_w_, int s_h_)
     v_w=1;
     v_h=(float)s_h/s_w*v_w;
     cam_dist=v_w*55/34.5;
-    cam_dir=(Point3d){-1,0,-.25};
+    cam_dir=(Point3d){0.25,0,-1};
     normalise(&cam_dir);
-    scr_pos=(Point3d){1,0,1};
+    scr_pos=(Point3d){0,0,0};
     update_cam_pos(scr_pos);
     update_s_y_s_x();
     
@@ -94,39 +95,55 @@ void update_s_y_s_x()
     normalise(&s_y);
 }
 
-float f(float x)
+
+void print_floats(int count, ...)
 {
-    return expf(-pow(4*x,2));
+    va_list args;
+    va_start(args, count);
+    
+    for(int i=0; i<count; ++i)
+    {
+        float f = va_arg(args, float);
+        printf("%.3f ",f);
+    }
+    printf("\n");
+    va_end(args);
+}
+float f(float ang)
+{
+    return (cosf(2*ang)+1)/2*M_PI_2*.5;
 }
 void init_points()
 {  
     const float updown_speed=.1;
-    const float s=1;
+    const float s=.1;
+    const float MAX_UP=M_PI_2;
+    const float MIN_DOWN=-M_PI_2;
+    const float R=2;
     int n=0;
     point_count=0;
-    for(float updown=-M_PI/2; updown<=M_PI/2; updown+=updown_speed)
+    for(float updown=MIN_DOWN; updown<=MAX_UP; updown+=updown_speed)
     {
         float r = cosf(updown);
-        int points_around=2*M_PI*r/s + 1;
+        int points_around=(2*M_PI*r+s/2)/s;
         point_count+=points_around;
     }
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
     
-    for(float updown=-M_PI/2; updown<=M_PI/2; updown+=updown_speed)
+    for(float updown=MIN_DOWN; updown<=MAX_UP; updown+=updown_speed)
     {
         float r = cosf(updown);
-        int points_around=2*M_PI*r/s + 1;
-
+        int points_around=(2*M_PI*r+s/2)/s;
         for(int i=-points_around/2; i<points_around-points_around/2; ++i)
         {
         Point3d p;
         float delta_t=s / r;
         float t=i*delta_t;
         if(r==0) t=0;
-        p.x=r*cosf(t);
-        p.y=r*sinf(t);
-        p.z=sinf(updown);
+        p.x=R*r*cosf(t);
+        p.y=R*r*sinf(t);
+        p.z=R*sinf(updown);
         points[n]=p;
         n++;
         }
