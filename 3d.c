@@ -99,28 +99,25 @@ float f(float x)
     return expf(-pow(4*x,2));
 }
 void init_points()
-{
-    
+{  
+    const float updown_speed=.1;
+    const float s=1;
     int n=0;
-    float s=1;
-    float r1=0;
-    float diff=1;
-    float rn=7;
-    float R=4;
     point_count=0;
-    for(float r=r1; r<=rn; r+=diff)
+    for(float updown=-M_PI/2; updown<=M_PI/2; updown+=updown_speed)
     {
+        float r = cosf(updown);
         int points_around=2*M_PI*r/s + 1;
         point_count+=points_around;
     }
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
     
-    //for now 1 circle
-    for(float r=r1; r<=rn; r+=diff)
+    for(float updown=-M_PI/2; updown<=M_PI/2; updown+=updown_speed)
     {
+        float r = cosf(updown);
         int points_around=2*M_PI*r/s + 1;
-        
+
         for(int i=-points_around/2; i<points_around-points_around/2; ++i)
         {
         Point3d p;
@@ -129,7 +126,7 @@ void init_points()
         if(r==0) t=0;
         p.x=r*cosf(t);
         p.y=r*sinf(t);
-        p.z=0;
+        p.z=sinf(updown);
         points[n]=p;
         n++;
         }
