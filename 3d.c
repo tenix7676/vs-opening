@@ -94,11 +94,9 @@ void update_s_y_s_x()
     normalise(&s_y);
 }
 
-float f(float ang)
+float f(float x)
 {
-    // if(ang < -M_PI/10) return 0;
-    // if(ang > M_PI/10) return 0;
-    return (cosf(9*ang))*M_PI_2*.3;
+    return (expf(16*-x*x))*M_PI_2*.35;
 }
 void init_points()
 {  
