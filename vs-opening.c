@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
             if(e.type == SDL_EVENT_QUIT)
                 return 0;
             if(e.type == SDL_EVENT_MOUSE_MOTION)
-                ;//turn_camera(e.motion.xrel,e.motion.yrel);
+                turn_camera(e.motion.xrel,e.motion.yrel);
             if(e.type == SDL_EVENT_KEY_DOWN)
             {
                 int i=0;

@@ -7,13 +7,16 @@
 
 void update_scr_pos();
 void update_cam_pos();
-void update_s_y_s_x(void);
+void update_s_y_s_x();
 void normalise(Point3d*);
+void update_cam_dir();
 
 int cam_dist;
 Point3d cam_dir;
 Point3d cam_pos;
 Point3d scr_pos; 
+float cam_leftright=0.0f;
+float cam_updown=-M_PI_2+0.01;
 //the closer the screen, i mean virutal world viewport is to the camera
 // the closer i can get to a 3d point without it disappearing 
 // (because it goes behind the screen)
@@ -37,16 +40,25 @@ void init_3d(int s_w_, int s_h_)
     v_w=1;
     v_h=(float)s_h/s_w*v_w;
     cam_dist=v_w*55/34.5;
-    // cam_dir=(Point3d){-0.384172, 0.921432, 0.058099};
-    // normalise(&cam_dir);
-    // scr_pos=(Point3d){0.653242, 0.555398, 0.390694};
-    cam_dir=(Point3d){0, 0, -1};
-    normalise(&cam_dir);
-    scr_pos=(Point3d){0, 0, 2};
+    update_cam_dir();
+    scr_pos=(Point3d){0, 0, .5};
     update_cam_pos(scr_pos);
-    update_s_y_s_x();
     
     init_points();
+}
+void update_s_y_s_x()
+{
+    s_x=(Point3d){sinf(cam_leftright), -cosf(cam_leftright), 0};
+    s_y.x=cosf(cam_updown-M_PI_2)*cosf(cam_leftright);
+    s_y.y=cosf(cam_updown-M_PI_2)*sinf(cam_leftright);
+    s_y.z=sinf(cam_updown-M_PI_2);
+}
+void update_cam_dir()
+{
+    cam_dir.z=sinf(cam_updown);
+    cam_dir.x=cosf(cam_updown)*cosf(cam_leftright);
+    cam_dir.y=cosf(cam_updown)*sinf(cam_leftright);
+    update_s_y_s_x();
 }
 void update_scr_pos()
 {
@@ -80,21 +92,10 @@ Point3d calc_normalised(Point3d a)
 void normalise(Point3d* a)
 {
     float len = length(*a);
+    if(len==0) return;
     a->x /= len;
     a->y /= len;
     a->z /= len;
-}
-void update_s_y_s_x()
-{
-    s_x=(Point3d){cam_dir.y, -cam_dir.x, 0};
-    normalise(&s_x);
-    Point3d cam_dir_xy={cam_dir.x, cam_dir.y, 0};
-    float len_cam_dir_xy=hypotf(cam_dir.x, cam_dir.y);
-    normalise(&cam_dir_xy);
-    s_y.x=cam_dir.z * cam_dir_xy.x;
-    s_y.y=cam_dir.z * cam_dir_xy.y;
-    s_y.z=-len_cam_dir_xy;
-    normalise(&s_y);
 }
 
 float f(float x)
@@ -243,24 +244,11 @@ void draw_screen_one_color(SDL_Surface* surface)
 }
 void turn_camera(float left_right,float up_down)
 {
-    //its annoying to look straight down, propably could fix it with some if
     const float turning_speed=-1/256.;
-    Point3d cam_dir_xy=(Point3d){cam_dir.x,cam_dir.y,0};
-    float len_cam_dir_xy=hypotf(cam_dir.x,cam_dir.y);
-    float radius=hypotf(cam_dir.z, len_cam_dir_xy);
-    float ang0=atan2f(cam_dir.z,len_cam_dir_xy);
-    float ang1=ang0+v_h/v_w*turning_speed*up_down;
-    cam_dir.z=radius*sinf(ang1);
-    normalise(&cam_dir_xy);
-    cam_dir.x=radius*cosf(ang1)*cam_dir_xy.x;
-    cam_dir.y=radius*cosf(ang1)*cam_dir_xy.y;
+    cam_updown+= up_down * turning_speed;
+    cam_leftright+= left_right * turning_speed;
     
-    ang0=atan2f(cam_dir.y,cam_dir.x);
-    ang1=ang0+turning_speed*left_right;
-    cam_dir.y=len_cam_dir_xy*sinf(ang1);
-    cam_dir.x=len_cam_dir_xy*cosf(ang1);
-    
-    update_s_y_s_x(); //guess i just forgor this lol
+    update_cam_dir();
 }
 void move_camera(float dist)
 {
