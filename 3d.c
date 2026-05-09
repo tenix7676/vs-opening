@@ -209,7 +209,7 @@ void draw_screen(SDL_Surface* surface)
                 fmin(255,rgb.b*255),
                 fmin(255,rgb.g*255),
                 fmin(255,rgb.r*255) };
-            float rect_radius=fmax(1,DIST_SCALING/len_p1);
+            float rect_radius=1+DIST_SCALING/len_p1;//powf(len_p1,.85);
             const SDL_Rect rect=(SDL_Rect){sex-rect_radius,sey-rect_radius,rect_radius,rect_radius};
             SDL_FillSurfaceRect(surface, &rect, *(Uint32*)(void*)&color);
         }
@@ -229,7 +229,7 @@ void draw_screen_one_color(SDL_Surface* surface)
         float len_p1 = check_point(points+i,&sex,&sey);
         if(len_p1 > 0)
         {
-            float rect_radius=fmax(1,DIST_SCALING/len_p1);//powf(len_p1,.85);
+            float rect_radius=1+DIST_SCALING/len_p1;//powf(len_p1,.85);
             const SDL_Rect rect=(SDL_Rect){sex-rect_radius,sey-rect_radius,rect_radius,rect_radius};
             rects[num_rects_this_frame] = rect;
             num_rects_this_frame++;
