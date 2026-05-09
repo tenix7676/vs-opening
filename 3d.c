@@ -37,9 +37,12 @@ void init_3d(int s_w_, int s_h_)
     v_w=1;
     v_h=(float)s_h/s_w*v_w;
     cam_dist=v_w*55/34.5;
-    cam_dir=(Point3d){-0.384172, 0.921432, 0.058099};
+    // cam_dir=(Point3d){-0.384172, 0.921432, 0.058099};
+    // normalise(&cam_dir);
+    // scr_pos=(Point3d){0.653242, 0.555398, 0.390694};
+    cam_dir=(Point3d){0, 0, -1};
     normalise(&cam_dir);
-    scr_pos=(Point3d){0.653242, 0.555398, 0.390694};
+    scr_pos=(Point3d){0, 0, 2};
     update_cam_pos(scr_pos);
     update_s_y_s_x();
     
@@ -280,7 +283,7 @@ void strafe_camera(float dist)
 }
 void print_scr_pos()
 {
-    printf("\tcam_dir=(Point3d){%f, %f, %f};\
-\tnormalise(&cam_dir);\
+    printf("\tcam_dir=(Point3d){%f, %f, %f};\n\
+\tnormalise(&cam_dir);\n\
 \tscr_pos=(Point3d){%f, %f, %f};\n", cam_dir.x, cam_dir.y, cam_dir.z, scr_pos.x, scr_pos.y, scr_pos.z);
 }
