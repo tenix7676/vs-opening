@@ -100,22 +100,23 @@ void normalise(Point3d* a)
 
 float f(float x)
 {
+    x*=4;
     return (expf(16*-x*x))*M_PI_2*.35;
 }
 void init_points()
 {
     point_count=0;
     
-    const float R=4;
-    const float s=.125;
-    const float d=2*s;
-    int num_circles_one_dir=10;
+    const float R=3;
+    const float s=128*.0069;
+    const float d=.069;
+    int num_circles_one_dir=2 * 1/d; //maybe different + and - number?
     int num_circles=num_circles_one_dir*2+1;
     
     for(int i=-num_circles_one_dir; i<=num_circles_one_dir; ++i)
     {
         float r = R + i*d;
-        int points_around=roundf((M_2_PI*r)/s);
+        int points_around=roundf((2*M_PI*r)/s);
         point_count += points_around;
     }
     
@@ -126,17 +127,17 @@ void init_points()
     for(int i=-num_circles_one_dir; i<=num_circles_one_dir; ++i)
     {
         float r = R + i*d;
-        int points_around=roundf((M_2_PI*r)/s);
+        int points_around=roundf((2*M_PI*r)/s);
         for(int j=-points_around/2; j<points_around-points_around/2; ++j)
         {
             Point3d p;
-            float delta_t=s / r/M_2_PI*points_around;
+            float delta_t=2*M_PI/points_around;// same as s / r;
             float t=j*delta_t;
             if(r==0) t=0;
-            p.x=i*d*cosf(0*f(t))*cosf(t);
-            p.y=i*d*cosf(0*f(t))*sinf(t);
-            p.z=i*d*sinf(0*f(t));
-            Point3d vecR=(Point3d){0*R*cosf(t),0*R*sinf(t),0};
+            p.x=i*d*cosf(f(t))*cosf(t);
+            p.y=i*d*cosf(f(t))*sinf(t);
+            p.z=i*d*sinf(f(t));
+            Point3d vecR=(Point3d){R*cosf(t),R*sinf(t),0};
             p.x+=vecR.x;
             p.y+=vecR.y;
             p.z+=vecR.z;
