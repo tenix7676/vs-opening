@@ -8,6 +8,20 @@
 #include "SDL3/SDL_main.h"
 #include "oklab.h"
 
+//actually i have a better idea
+// lets make a backwards renderer
+// we take the picture
+// and we shoot a ray in the direction of the point
+// the dist is 1/size of the point
+// now i just a need a program to take a blurry circle
+// and tell me its size
+// so like a backwards anti aliasing
+// but thats propably impossible
+// so i will just roughly guess it
+// maybe add up all the r g b values to get the size
+// idk
+
+
 typedef struct Button
 {
     int down;

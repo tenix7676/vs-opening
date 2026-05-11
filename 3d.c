@@ -102,7 +102,7 @@ float f(float x)
 {
     // x*=4;
     // return (expf(16*-x*x))*M_PI_2*.35;
-    return expf(-128*x*x)*M_PI_2*1;
+    return expf(-128*x*x)*M_PI_2*.5+M_PI_2*.5*x;
 }
 void init_points()
 {
