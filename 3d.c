@@ -100,15 +100,16 @@ void normalise(Point3d* a)
 
 float f(float x)
 {
-    x*=4;
-    return (expf(16*-x*x))*M_PI_2*.35;
+    // x*=4;
+    // return (expf(16*-x*x))*M_PI_2*.35;
+    return expf(-128*x*x)*M_PI_2*1;
 }
 void init_points()
 {
     point_count=0;
     
     const float R=3;
-    const float s=128*.0069;
+    const float s=.0069;
     const float d=.069;
     int num_circles_one_dir=2 * 1/d; //maybe different + and - number?
     int num_circles=num_circles_one_dir*2+1;
