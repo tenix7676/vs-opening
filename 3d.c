@@ -103,45 +103,48 @@ float f(float x)
     return (expf(16*-x*x))*M_PI_2*.35;
 }
 void init_points()
-{  
-    const float updown_speed=.1;
-    const float s= .004;
-    const float rs=.012;
-    const float len_stick=1;
-    int n=0;
+{
     point_count=0;
-
-    float r = 1;
-    int points_around=(2*M_PI*r+s/2)/s;
-    // point_count+=points_around;
-    for(int i=0; i < points_around; ++i)
+    
+    const float R=4;
+    const float s=.125;
+    const float d=2*s;
+    int num_circles_one_dir=10;
+    int num_circles=num_circles_one_dir*2+1;
+    
+    for(int i=-num_circles_one_dir; i<=num_circles_one_dir; ++i)
     {
-        int points_along=len_stick/rs;
-        point_count+=points_along;
+        float r = R + i*d;
+        int points_around=roundf((M_2_PI*r)/s);
+        point_count += points_around;
     }
+    
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
     
-    r = 1;
-    points_around=(2*M_PI*r+s/2)/s;
-    for(int i=-points_around/2; i<points_around-points_around/2; ++i)
+    int n=0;
+    for(int i=-num_circles_one_dir; i<=num_circles_one_dir; ++i)
     {
-    Point3d p;
-    float delta_t=s / r;
-    float t=i*delta_t;
-    if(r==0) t=0;
-    int points_along=len_stick/rs;
-    for(int j=0; j<points_along; ++j)
-    {
-        float dist=j*rs;
-        float r=cosf(f(t));
-        p.x=dist*r*cosf(t);
-        p.y=dist*r*sinf(t);
-        p.z=dist*sinf(f(t));
-        points[n]=p;
-        n++;
+        float r = R + i*d;
+        int points_around=roundf((M_2_PI*r)/s);
+        for(int j=-points_around/2; j<points_around-points_around/2; ++j)
+        {
+            Point3d p;
+            float delta_t=s / r/M_2_PI*points_around;
+            float t=j*delta_t;
+            if(r==0) t=0;
+            p.x=i*d*cosf(0*f(t))*cosf(t);
+            p.y=i*d*cosf(0*f(t))*sinf(t);
+            p.z=i*d*sinf(0*f(t));
+            Point3d vecR=(Point3d){0*R*cosf(t),0*R*sinf(t),0};
+            p.x+=vecR.x;
+            p.y+=vecR.y;
+            p.z+=vecR.z;
+            points[n]=p;
+            n++;
+        }
     }
-    }
+    //assert n == point_count;
 }
 void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
 {
@@ -245,7 +248,7 @@ void draw_screen_one_color(SDL_Surface* surface)
 void turn_camera(float left_right,float up_down)
 {
     const float turning_speed=-1/256.;
-    cam_updown+= up_down * turning_speed;
+    cam_updown+= .5f * up_down * turning_speed;
     cam_leftright+= left_right * turning_speed;
     
     update_cam_dir();
@@ -271,7 +274,8 @@ void strafe_camera(float dist)
 }
 void print_scr_pos()
 {
-    printf("\tcam_dir=(Point3d){%f, %f, %f};\n\
-\tnormalise(&cam_dir);\n\
-\tscr_pos=(Point3d){%f, %f, %f};\n", cam_dir.x, cam_dir.y, cam_dir.z, scr_pos.x, scr_pos.y, scr_pos.z);
+    printf("\
+float cam_leftright=%f;\n\
+float cam_updown=%f;\n\
+\tscr_pos=(Point3d){%f, %f, %f};\n", cam_leftright, cam_updown, scr_pos.x, scr_pos.y, scr_pos.z);
 }
