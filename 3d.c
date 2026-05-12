@@ -207,7 +207,7 @@ void draw_screen_one_color(SDL_Surface* surface)
             num_rects_this_frame++;
         }
     }
-    SDL_Color color = (SDL_Color){ 255, 255, 255 };
+    SDL_Color color = (SDL_Color){ 255, 157, 213 };//this goes b g r
     SDL_FillSurfaceRects(surface, rects, num_rects_this_frame, *(Uint32*)(void*)&color);
 }
 void turn_camera(float left_right,float up_down)
