@@ -225,14 +225,15 @@ int main(int argc, char* argv[])
                                 }
                             }
                         }
-                        backwards_render(4000/(float)sum_,x,y);
+                        backwards_render(4000/(float)sum_,x*screen_surf->w/(float)bmp->w,y*screen_surf->h/(float)bmp->h);
                     }
                 }
             }
-            SDL_BlitSurface(bmp, NULL, screen_surf, NULL);
+            SDL_BlitSurfaceScaled(bmp, NULL, screen_surf, NULL, SDL_SCALEMODE_NEAREST);
             SDL_UpdateWindowSurface(win);
             printf("brightness=%d\n",brightness);
         }
+        SDL_ClearSurface(screen_surf,0,0,0,1);
         draw_screen_one_color(screen_surf);
         SDL_UpdateWindowSurface(win);
         sum+=delta;
