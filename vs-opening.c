@@ -206,6 +206,7 @@ int main(int argc, char* argv[])
                         const float x0=-545.415;
                         const float y0=+10.0662;
                         float diameter = a0/(sum - x0) + y0;
+                        int sum_=0;
                         for(int box_x=-diameter/2; box_x < diameter - diameter/2; ++box_x)
                         {
                             for(int box_y=-diameter/2; box_y < diameter - diameter/2; ++box_y)
@@ -214,6 +215,9 @@ int main(int argc, char* argv[])
                                 {
                                     if(x+box_x >= 0 && x+box_x < bmp->w && y+box_y >=0 && y+box_y < bmp->h)
                                     {
+                                        sum_+=bmp_pixels[4*(x+box_x)+0+(y+box_y)*bmp->pitch];
+                                        sum_+=bmp_pixels[4*(x+box_x)+1+(y+box_y)*bmp->pitch];
+                                        sum_+=bmp_pixels[4*(x+box_x)+2+(y+box_y)*bmp->pitch];
                                         bmp_pixels[4*(x+box_x)+0+(y+box_y)*bmp->pitch]=0;
                                         bmp_pixels[4*(x+box_x)+1+(y+box_y)*bmp->pitch]=0;
                                         bmp_pixels[4*(x+box_x)+2+(y+box_y)*bmp->pitch]=0;
@@ -221,7 +225,7 @@ int main(int argc, char* argv[])
                                 }
                             }
                         }
-                        backwards_render(1000/(float)sum,x,y);
+                        backwards_render(4000/(float)sum_,x,y);
                     }
                 }
             }
