@@ -251,7 +251,6 @@ void backwards_render(float dist, int sex, int sey)
     sey -= s_h/2;
     float s_y_scale = sey * 2./s_h * v_h;
     
-    printf("p=%f,%f\n",s_x_scale,s_y_scale);
     Point3d p = cam_dir;
     p.x += s_x.x * s_x_scale;
     p.y += s_x.y * s_x_scale;

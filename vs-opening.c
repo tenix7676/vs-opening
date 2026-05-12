@@ -68,7 +68,7 @@ void reset_buttons()
 int main(int argc, char* argv[])
 {
     SDL_Window* win;
-    win = SDL_CreateWindow("vs-opening",680, 420, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN));
+    win = SDL_CreateWindow("vs-opening",680, 420, 0&SDL_WINDOW_BORDERLESS | (-1&SDL_WINDOW_FULLSCREEN));
     SDL_SetWindowRelativeMouseMode(win,1);
     int width, height;
     SDL_GetWindowSize(win, &width, &height);
@@ -192,9 +192,9 @@ int main(int argc, char* argv[])
         Uint8* bmp_pixels = bmp->pixels;
         for(; brightness>=100; --brightness)
         {
-            for(int y=0; y<screen_surf->h; ++y)
+            for(int y=0; y<bmp->h; ++y)
             {
-                for(int x=0; x<screen_surf->w; ++x)
+                for(int x=0; x<bmp->w; ++x)
                 {
                     Uint8* b = &bmp_pixels[4*x+0+y*bmp->pitch];
                     Uint8* g = &bmp_pixels[4*x+1+y*bmp->pitch];
