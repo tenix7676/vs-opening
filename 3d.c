@@ -15,8 +15,8 @@ int cam_dist;
 Point3d cam_dir;
 Point3d cam_pos;
 Point3d scr_pos; 
-float cam_leftright=0.0f;
-float cam_updown=-M_PI_2+0.01;
+float cam_leftright=0;
+float cam_updown=0.0f;
 //the closer the screen, i mean virutal world viewport is to the camera
 // the closer i can get to a 3d point without it disappearing 
 // (because it goes behind the screen)
@@ -41,7 +41,7 @@ void init_3d(int s_w_, int s_h_)
     v_h=(float)s_h/s_w*v_w;
     cam_dist=v_w*55/34.5;
     update_cam_dir();
-    scr_pos=(Point3d){0, 0, .5};
+    scr_pos=(Point3d){-1, 0, 0};
     update_cam_pos(scr_pos);
     
     init_points();
@@ -106,47 +106,10 @@ float f(float x)
 }
 void init_points()
 {
-    point_count=0;
-    
-    const float R=3;
-    const float s=.0069;
-    const float d=.069;
-    int num_circles_one_dir=2 * 1/d; //maybe different + and - number?
-    int num_circles=num_circles_one_dir*2+1;
-    
-    for(int i=-num_circles_one_dir; i<=num_circles_one_dir; ++i)
-    {
-        float r = R + i*d;
-        int points_around=roundf((2*M_PI*r)/s);
-        point_count += points_around;
-    }
-    
+    point_count=1024*16;//PLENTY
+
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
-    
-    int n=0;
-    for(int i=-num_circles_one_dir; i<=num_circles_one_dir; ++i)
-    {
-        float r = R + i*d;
-        int points_around=roundf((2*M_PI*r)/s);
-        for(int j=-points_around/2; j<points_around-points_around/2; ++j)
-        {
-            Point3d p;
-            float delta_t=2*M_PI/points_around;// same as s / r;
-            float t=j*delta_t;
-            if(r==0) t=0;
-            p.x=i*d*cosf(f(t))*cosf(t);
-            p.y=i*d*cosf(f(t))*sinf(t);
-            p.z=i*d*sinf(f(t));
-            Point3d vecR=(Point3d){R*cosf(t),R*sinf(t),0};
-            p.x+=vecR.x;
-            p.y+=vecR.y;
-            p.z+=vecR.z;
-            points[n]=p;
-            n++;
-        }
-    }
-    //assert n == point_count;
 }
 void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
 {
@@ -280,4 +243,32 @@ void print_scr_pos()
 float cam_leftright=%f;\n\
 float cam_updown=%f;\n\
 \tscr_pos=(Point3d){%f, %f, %f};\n", cam_leftright, cam_updown, scr_pos.x, scr_pos.y, scr_pos.z);
+}
+void backwards_render(float dist, int sex, int sey)
+{
+    sex -= s_w/2;
+    float s_x_scale = sex * 2./s_w * v_w;
+    sey -= s_h/2;
+    float s_y_scale = sey * 2./s_h * v_h;
+    
+    printf("p=%f,%f\n",s_x_scale,s_y_scale);
+    Point3d p = cam_dir;
+    p.x += s_x.x * s_x_scale;
+    p.y += s_x.y * s_x_scale;
+    p.z += s_x.z * s_x_scale;
+    
+    p.x += s_y.x * s_y_scale;
+    p.y += s_y.y * s_y_scale;
+    p.z += s_y.z * s_y_scale;
+    
+    p.x *= dist;
+    p.y *= dist;
+    p.z *= dist;
+    
+    p.x += cam_pos.x;
+    p.y += cam_pos.y;
+    p.z += cam_pos.z;
+    
+    static int n=0;
+    if(n<point_count) points[n++]=p;
 }
