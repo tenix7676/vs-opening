@@ -68,7 +68,7 @@ void reset_buttons()
 int main(int argc, char* argv[])
 {
     SDL_Window* win;
-    win = SDL_CreateWindow("vs-opening",680, 420, 0&SDL_WINDOW_BORDERLESS | (-1&SDL_WINDOW_FULLSCREEN));
+    win = SDL_CreateWindow("vs-opening",690, 420, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN));
     SDL_SetWindowRelativeMouseMode(win,1);
     int width, height;
     SDL_GetWindowSize(win, &width, &height);
@@ -123,7 +123,6 @@ int main(int argc, char* argv[])
             // }
         }
     }
-    printf("%d\n", bmp->format & SDL_PIXELFORMAT_ABGR32);
     init_3d(width, height);
 
     int brightness=765;
@@ -231,7 +230,10 @@ int main(int argc, char* argv[])
             }
             SDL_BlitSurfaceScaled(bmp, NULL, screen_surf, NULL, SDL_SCALEMODE_NEAREST);
             SDL_UpdateWindowSurface(win);
-            printf("brightness=%d\n",brightness);
+            char loading_animation[]="|/-\\";
+            printf("\r%c",loading_animation[brightness/64%4]);
+            fflush(stdout);
+            if(brightness<=100) printf("\r+ Generating points from image took %.3fms\n", SDL_NS_TO_MS((float)SDL_GetTicksNS()-start));
         }
         SDL_ClearSurface(screen_surf,0,0,0,1);
         draw_screen_one_color(screen_surf);
@@ -242,6 +244,12 @@ int main(int argc, char* argv[])
             printf("avg: %.3fms\n",SDL_NS_TO_MS(sum/(float)it));
             it=0;
             sum=0;
+            for(int i=0; i <10; ++i)
+            {
+                int s = SDL_GetTicksNS();
+                int e = SDL_GetTicksNS();
+                printf("smallest time interval: %dns\n",e-s); //this hit 100ns most of the time and even 0ns once o.O
+            }
         }
         it++;
         end=SDL_GetTicksNS();
