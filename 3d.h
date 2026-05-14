@@ -21,7 +21,7 @@ void init_3d(int s_w_, int s_h_);
 void init_points();
 void update_points(Point3d* points, size_t point_count);
 void draw_screen(SDL_Surface* surface);
-void draw_screen_one_color(SDL_Surface* surface);
+void draw_screen_one_color(SDL_Surface* surface, bool change_closest_to_white);
 void turn_camera(float left_right,float up_down);
 void move_camera(float dist);
 void fly_camera(float dist);

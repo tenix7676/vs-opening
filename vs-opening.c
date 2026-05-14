@@ -140,6 +140,7 @@ int main(int argc, char* argv[])
             if(e.type == SDL_EVENT_KEY_DOWN)
             {
                 int i=0;
+                if(e.key.key == SDLK_G) { buttons[i].held=1; buttons[i].down=1; } ++i;
                 if(e.key.key == SDLK_P) { buttons[i].held=1; buttons[i].down=1; } ++i;
                 if(e.key.key == SDLK_W) { buttons[i].held=1; buttons[i].down=1; } ++i;
                 if(e.key.key == SDLK_S) { buttons[i].held=1; buttons[i].down=1; } ++i;
@@ -153,6 +154,7 @@ int main(int argc, char* argv[])
             if(e.type == SDL_EVENT_KEY_UP)
             {
                 int i=0;
+                if(e.key.key == SDLK_G) { buttons[i].held=0; buttons[i].up=1; } ++i;
                 if(e.key.key == SDLK_P) { buttons[i].held=0; buttons[i].up=1; } ++i;
                 if(e.key.key == SDLK_W) { buttons[i].held=0; buttons[i].up=1; } ++i;
                 if(e.key.key == SDLK_S) { buttons[i].held=0; buttons[i].up=1; } ++i;
@@ -165,14 +167,17 @@ int main(int argc, char* argv[])
             }
         }
         
-        {
+        int closest_to_white=0;
+        {//Buttons down
         int i=0;
+        if(buttons[i].down) { closest_to_white=1; } ++i;
         if(buttons[i].down) { print_scr_pos(); } ++i;
         }
-        {
+        {//Buttons held
+        const float flyinGspeed=0.006;
         int i=0;
         i++;
-        const float flyinGspeed=0.006;
+        i++;
         if(buttons[i].held) { move_camera(flyinGspeed); } ++i;
         if(buttons[i].held) { move_camera(-flyinGspeed); } ++i;
         if(buttons[i].held) { strafe_camera(flyinGspeed); } ++i;
@@ -224,7 +229,8 @@ int main(int argc, char* argv[])
                                 }
                             }
                         }
-                        backwards_render(4000/(float)sum_,x*screen_surf->w/(float)bmp->w,y*screen_surf->h/(float)bmp->h);
+                        float dist=4000/(float)sum_;
+                        backwards_render(dist,x*screen_surf->w/(float)bmp->w,y*screen_surf->h/(float)bmp->h);
                     }
                 }
             }
@@ -236,7 +242,7 @@ int main(int argc, char* argv[])
             if(brightness<=100) printf("\r+ Generating points from image took %.3fms\n", SDL_NS_TO_MS((float)SDL_GetTicksNS()-start));
         }
         SDL_ClearSurface(screen_surf,0,0,0,1);
-        draw_screen_one_color(screen_surf);
+        draw_screen_one_color(screen_surf, closest_to_white);
         SDL_UpdateWindowSurface(win);
         sum+=delta;
         if(it>=10)
@@ -244,12 +250,6 @@ int main(int argc, char* argv[])
             printf("avg: %.3fms\n",SDL_NS_TO_MS(sum/(float)it));
             it=0;
             sum=0;
-            for(int i=0; i <10; ++i)
-            {
-                int s = SDL_GetTicksNS();
-                int e = SDL_GetTicksNS();
-                printf("smallest time interval: %dns\n",e-s); //this hit 100ns most of the time and even 0ns once o.O
-            }
         }
         it++;
         end=SDL_GetTicksNS();

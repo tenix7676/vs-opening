@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "3d.h"
 #include "oklab.h"
+#include <stdio.h>
 
 void update_scr_pos();
 void update_cam_pos();
@@ -33,6 +34,9 @@ Point3d s_y, s_x;
 size_t point_count=0;
 Point3d* points=NULL;
 SDL_Rect* rects=NULL;
+size_t point_count_white=0;
+Point3d* points_white=NULL;
+SDL_Rect* rects_white=NULL;
 
 void init_3d(int s_w_, int s_h_)
 {
@@ -110,6 +114,19 @@ void init_points()
 
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
+    
+    const float R=6;
+    Point3d start = (Point3d){-1.234010, -0.375224+R, 0.401867};
+    const float delta_t=M_PI/2/5000;
+    for(int i=0; i<5000;++i)
+    {
+        float t=i*-delta_t;
+        Point3d p;
+        p.x=R*cosf(t)+start.x;
+        p.y=R*sinf(t)+start.y;
+        p.z=start.z;
+        points[6000+i]=p;
+    }
 }
 void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
 {
@@ -188,12 +205,14 @@ void draw_screen(SDL_Surface* surface)
     }
 }
 
-void draw_screen_one_color(SDL_Surface* surface)
+void draw_screen_one_color(SDL_Surface* surface, bool change_closest_to_white)
 {
     //Just in case
     normalise(&cam_dir);
     normalise(&s_x);
     normalise(&s_y);
+    float min_len_p1=99999999999;//this sucks. i know. (in practice it doesnt matter)
+    int closest=-1;
     int num_rects_this_frame=0;
     for(size_t i=0; i < point_count; ++i)
     {
@@ -201,7 +220,13 @@ void draw_screen_one_color(SDL_Surface* surface)
         float len_p1 = check_point(points+i,&sex,&sey);
         if(len_p1 > 0)
         {
-            float rect_radius=1+DIST_SCALING/len_p1;//powf(len_p1,.85);
+            if(len_p1 < min_len_p1 && change_closest_to_white)
+            {
+                min_len_p1=len_p1;
+                closest=i;
+                printf("closest=%d, %f\n",closest, min_len_p1);
+            }
+            float rect_radius=1+DIST_SCALING/len_p1;
             const SDL_Rect rect=(SDL_Rect){sex-rect_radius,sey-rect_radius,rect_radius,rect_radius};
             rects[num_rects_this_frame] = rect;
             num_rects_this_frame++;
@@ -209,6 +234,48 @@ void draw_screen_one_color(SDL_Surface* surface)
     }
     SDL_Color color = (SDL_Color){ 255, 157, 213 };//this goes b g r
     SDL_FillSurfaceRects(surface, rects, num_rects_this_frame, *(Uint32*)(void*)&color);
+    
+    if(change_closest_to_white)
+    {
+        printf("closest=%d, %f\n",closest, min_len_p1);
+        point_count_white++;
+        if(points_white == NULL) 
+        {
+            rects_white=malloc(sizeof(SDL_Rect)*point_count_white);
+            points_white=malloc(point_count_white*sizeof(Point3d));
+        }
+        else 
+        {
+            rects_white=realloc(rects_white,sizeof(SDL_Rect)*point_count_white);
+            points_white=realloc(points_white,point_count_white*sizeof(Point3d));
+        }
+        
+        char clipboard_text[100];
+        sprintf(clipboard_text, "{%f, %f, %f}",points[closest].x,points[closest].y,points[closest].z);
+        SDL_SetClipboardText(clipboard_text);
+        printf("closest=%f, %f, %f\n",points[closest].x,points[closest].y,points[closest].z);
+        points_white[point_count_white-1]=points[closest];
+        points[closest]=points[point_count-1];
+        point_count--;
+        //points = realloc(points,point_count*sizeof(Point3d)); //honestly who cares?
+        printf("---------------------------------\n");
+    }
+    //white points
+    num_rects_this_frame=0;
+    for(size_t i=0; i < point_count_white; ++i)
+    {
+        int sex, sey;
+        float len_p1 = check_point(points_white+i,&sex,&sey);
+        if(len_p1 > 0)
+        {
+            float rect_radius=1+DIST_SCALING/len_p1;
+            const SDL_Rect rect=(SDL_Rect){sex-rect_radius,sey-rect_radius,rect_radius,rect_radius};
+            rects_white[num_rects_this_frame] = rect;
+            num_rects_this_frame++;
+        }
+    }
+    color = (SDL_Color){ 255, 0, 255 };
+    SDL_FillSurfaceRects(surface, rects_white, num_rects_this_frame, *(Uint32*)(void*)&color);
 }
 void turn_camera(float left_right,float up_down)
 {
@@ -267,6 +334,18 @@ void backwards_render(float dist, int sex, int sey)
     p.x += cam_pos.x;
     p.y += cam_pos.y;
     p.z += cam_pos.z;
+    
+    
+    const float R=6;
+    Point3d start = (Point3d){-1.234010, -0.375224+R, 0.401867};
+    const float delta_t=M_PI/2/5000;
+    Point3d P_=p;
+    P_.x-=start.x;
+    P_.y-=start.y;
+    float t = atan2f(P_.y,P_.x);
+    // p.x-=R*cosf(t)+start.x;
+    p.y-=R*sinf(t)+start.y;
+
     
     static int n=0;
     if(n<point_count) points[n++]=p;
