@@ -344,7 +344,7 @@ void backwards_render(float dist, int sex, int sey)
     P_.y-=start.y;
     float t = atan2f(P_.y,P_.x);
     // p.x-=R*cosf(t)+start.x;
-    p.y-=R*sinf(t)+start.y;
+    //p.y+=1*R*sinf(t)+start.y;
 
     
     static int n=0;
