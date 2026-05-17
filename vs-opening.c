@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
     SDL_Surface* bmp = SDL_ConvertSurface(bullshit=SDL_LoadBMP("goal.bmp"), screen_surf->format);
     SDL_DestroySurface(bullshit);
     unsigned char* bmp_pixels=bmp->pixels;
+    int* bmp_ints=malloc(sizeof(int)*bmp->w*bmp->h);
     for(int y=0; y<bmp->h; ++y)
     {
         for(int x=0; x<bmp->w; ++x)
