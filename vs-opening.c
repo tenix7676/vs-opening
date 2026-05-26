@@ -138,6 +138,7 @@ void fill(SDL_Surface* surf, SDL_Window* win)
         x++;
     }
     end_x=x-1;
+    //SDL_FillSurfaceRect(SDL_Surface *dst, const SDL_Rect *rect, Uint32 color);
     //DrawLine
     for(int x=start_x; x<=end_x; x++)
     {
@@ -148,11 +149,11 @@ void fill(SDL_Surface* surf, SDL_Window* win)
         pxl[0]=0;
         pxl[1]=0;
         pxl[2]=200;
+        SDL_UpdateWindowSurface(win);
+        SDL_Delay(1);
     }
-    SDL_UpdateWindowSurface(win);
     
     printf("done y=%d, stack_size=%d\n",y, stack_size);
-    SDL_Delay(10);
     //now repeat for everyting in the stack
     } while(stack_size!=0);
 }
