@@ -40,7 +40,7 @@ void fill(SDL_Surface* surf, SDL_Window* win)
     int height    = surf->h;
     int pitch     = surf->pitch;
     
-    int plenty = 4*1024;
+    int plenty = 1024;
     SDL_Point* stack = malloc(plenty * sizeof(SDL_Point));
     int stack_size = 0;
     
@@ -138,20 +138,15 @@ void fill(SDL_Surface* surf, SDL_Window* win)
         x++;
     }
     end_x=x-1;
-    //SDL_FillSurfaceRect(SDL_Surface *dst, const SDL_Rect *rect, Uint32 color);
     //DrawLine
-    for(int x=start_x; x<=end_x; x++)
-    {
-        Uint8* pxl = pxl_at(x,y,pitch,pixels);
-        //we depend on this being 0 0 0
-        // so we dont go over the same pixels
-        // but i guess for now i only check if b==0
-        pxl[0]=0;
-        pxl[1]=0;
-        pxl[2]=200;
-        SDL_UpdateWindowSurface(win);
-        SDL_Delay(1);
-    }
+    SDL_Rect rect;
+    rect.x=start_x;
+    rect.w=end_x - start_x + 1;
+    rect.y=y;
+    rect.h=1;
+    SDL_FillSurfaceRect(surf, &rect, (Uint32)(SDL_Color){0,0,200,0});
+    SDL_UpdateWindowSurface(win);
+    SDL_Delay(1);
     
     printf("done y=%d, stack_size=%d\n",y, stack_size);
     //now repeat for everyting in the stack
