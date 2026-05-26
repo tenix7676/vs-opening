@@ -33,7 +33,7 @@ Uint8* pxl_at(int x, int y, int pitch, Uint8* pixels)
     return &pixels[4*x+pitch*y];
 }
 
-void fill(SDL_Surface* surf)
+void fill(SDL_Surface* surf, SDL_Window* win)
 {
     Uint8* pixels = surf->pixels;
     int width     = surf->w;
@@ -149,8 +149,10 @@ void fill(SDL_Surface* surf)
         pxl[1]=0;
         pxl[2]=200;
     }
+    SDL_UpdateWindowSurface(win);
     
     printf("done y=%d, stack_size=%d\n",y, stack_size);
+    SDL_Delay(10);
     //now repeat for everyting in the stack
     } while(stack_size!=0);
 }
@@ -167,8 +169,7 @@ int main(int argc, char* argv[])
     SDL_SetWindowSize(win, width, height);
     SDL_Surface* screen_surf = SDL_GetWindowSurface(win);
     SDL_BlitSurface(bmp, NULL, screen_surf, NULL);
-    fill(screen_surf);
-    SDL_SaveBMP(screen_surf, "angel_modifried.bmp");
+    //SDL_SaveBMP(screen_surf, "angel_modifried.bmp");
     //init_3d(width, height);
 
     int it=1;
@@ -231,7 +232,7 @@ int main(int argc, char* argv[])
         reset_buttons();
         
 
-        SDL_UpdateWindowSurface(win);
+        fill(screen_surf, win);
         sum+=delta;
         if(it>=10)
         {
