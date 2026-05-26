@@ -33,23 +33,30 @@ Uint8* pxl_at(int x, int y, int pitch, Uint8* pixels)
     return &pixels[4*x+pitch*y];
 }
 
-void fill(SDL_Surface* surf, SDL_Window* win)
+void f(SDL_Surface* surf)
+{
+    Uint8* pixels = surf->pixels;
+    int width     = surf->w;
+    int height    = surf->h;
+    int pitch     = surf->pitch;
+    for(int y=0; y<height; ++y)
+        for(int x=0; x<width; ++x)
+        {
+            if(
+            fill(x,y)
+        }
+}
+
+SDL_Point stack[256];
+void fill(SDL_Surface* surf, int x0, int y0)
 {
     Uint8* pixels = surf->pixels;
     int width     = surf->w;
     int height    = surf->h;
     int pitch     = surf->pitch;
     
-    int plenty = 1024;
-    SDL_Point* stack = malloc(plenty * sizeof(SDL_Point));
     int stack_size = 0;
-    
-    for(int y=30; y<height; ++y)
-        for(int x=80; x<width; ++x)
-        {
-        }
-    int x0=80;
-    int y0=31;
+
     stack[stack_size]=(SDL_Point){x0,y0};
     stack_size++;
     do
@@ -145,14 +152,7 @@ void fill(SDL_Surface* surf, SDL_Window* win)
     rect.y=y;
     rect.h=1;
     SDL_FillSurfaceRect(surf, &rect, (Uint32)(SDL_Color){0,0,200,0});
-    SDL_UpdateWindowSurface(win);
 
-    char path[128];
-    static int i=0;
-    sprintf(path,"animation/%d.bmp",i++);
-    if(!SDL_SaveBMP(surf,path))
-        printf("Fuck me\n");
-    
     //now repeat for everyting in the stack
     } while(stack_size!=0);
 }
