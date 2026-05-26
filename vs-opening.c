@@ -1,50 +1,13 @@
 #include <stdio.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdlib.h>
 #include "3d.h"
-#define M_PI        3.14159265358979323846
 #include "SDL3/SDL.h"
-#undef main
 #include "SDL3/SDL_main.h"
 #include "oklab.h"
 #include <assert.h>
 
-//actually i have a better idea
-// lets make a backwards renderer
-// we take the picture
-// and we shoot a ray in the direction of the point
-// the dist is 1/size of the point
-// now i just a need a program to take a blurry circle
-// and tell me its size
-// so like a backwards anti aliasing
-// but thats propably impossible
-// so i will just roughly guess it
-// maybe add up all the r g b values to get the size
-// idk
-
-//w ogole na poczatku bym zrobil pas
-// wszystkie piksle < 16 16 16
-// maja sie rownac 16 16 16
-//piksel po pikselu
-// jeśli piksel rgb > 16 16 16
-// to poszukaj sąsiadów 
-// pozycja punktu to śr ważona
-// waga to jasność
-// poz = (jasność0 * poz0 + jasność1 * poz1 + ...) / jasność;
-// odległość ~ 1 / jasność;
-// "usun" wszystkich sasiadiow z listy pikseli zeby ich nie przejsc wiecej niz raz
-// w sensie oznacz ich jakos zeby nastepny razem je skipnac
-
-//może jakiś signal processing trzeba bedzie poczytac
-// bo mamy punktu wysokie 
-// i chcemy zeby piksele na okolo nich tez zaliczaly sie do tych punktow
-// ale to bedzie roboty...
-// i tak ciekawsze niz zgadywanie tej gownianej funkcji
-
-
-// !!!!!!!!!!!!!!!!!!!!!!!!
-// ! Na razie zrób PROSTO !
-// !!!!!!!!!!!!!!!!!!!!!!!!
 typedef struct Button
 {
     int down;
@@ -65,6 +28,132 @@ void reset_buttons()
     }
 }
 
+Uint8* pxl_at(int x, int y, int pitch, Uint8* pixels)
+{
+    return &pixels[4*x+pitch*y];
+}
+
+void fill(SDL_Surface* surf)
+{
+    Uint8* pixels = surf->pixels;
+    int width     = surf->w;
+    int height    = surf->h;
+    int pitch     = surf->pitch;
+    
+    int plenty = 4*1024;
+    SDL_Point* stack = malloc(plenty * sizeof(SDL_Point));
+    int stack_size = 0;
+    
+    for(int y=30; y<height; ++y)
+        for(int x=80; x<width; ++x)
+        {
+        }
+    int x0=80;
+    int y0=31;
+    stack[stack_size]=(SDL_Point){x0,y0};
+    stack_size++;
+    do
+    {
+    int start_x,end_x;
+    int x=stack[stack_size-1].x;
+    int y=stack[stack_size-1].y;
+    stack_size--;
+    while(1) //leftmost fill_x
+    {
+        if(x-1 < 0)
+            break;
+        Uint8* pxl;
+        pxl = pxl_at(x-1,y,pitch,pixels);
+        
+        if(*pxl == 0)
+            break;
+        x--;
+    }
+    start_x=x;
+    while(1)
+    {
+        Uint8* pxl;
+        Uint8* pxl_behind;
+        Uint8* pxl_top;
+        Uint8* pxl_topleft;
+        if(x < 0 || x >= width)
+        {
+            break;
+        }
+        pxl = pxl_at(x,y,pitch,pixels);
+        if(*pxl == 0)
+        {
+            break;
+        }
+        int bottom = 0;
+        while(bottom <= 2)
+        {
+            if(x-1 < 0)
+            {
+                if(y-1+bottom >= 0 && y-1+bottom < height)
+                {
+                    //add top/ bottom
+                    pxl_top = pxl_at(x,y-1+bottom,pitch,pixels);
+                    if(*pxl_top !=0)
+                    {
+                        stack[stack_size]=(SDL_Point){x,y-1+bottom};
+                        stack_size++;
+                    }
+                }
+            }
+            else
+            {
+                pxl_behind = pxl_at(x-1,y,pitch,pixels);
+                if(*pxl_behind == 0)
+                {
+                    if(y-1+bottom >= 0 && y-1+bottom < height)
+                    {
+                        //add top/ bottom
+                        pxl_topleft = pxl_at(x-1,y-1+bottom,pitch,pixels);
+                        pxl_top = pxl_at(x,y-1+bottom,pitch,pixels);
+                        if(*pxl_top !=0 &&
+                           *pxl_topleft != 0) //this is needed so that we dont do the same pxl second time below
+                        {
+                            stack[stack_size]=(SDL_Point){x,y-1+bottom};
+                            stack_size++;
+                        }
+                    }
+                }
+            }
+            
+            if(y-1+bottom >= 0 && y-1+bottom < height)
+            {
+                //add top/ bottom
+                pxl_topleft = pxl_at(x-1,y-1+bottom,pitch,pixels);
+                pxl_top = pxl_at(x,y-1+bottom,pitch,pixels);
+                if(*pxl_top !=0 &&
+                   *pxl_topleft==0)
+                {
+                    stack[stack_size]=(SDL_Point){x,y-1+bottom};
+                    stack_size++;
+                }
+            }
+            bottom+=2;
+        }
+        x++;
+    }
+    end_x=x-1;
+    //DrawLine
+    for(int x=start_x; x<=end_x; x++)
+    {
+        Uint8* pxl = pxl_at(x,y,pitch,pixels);
+        //we depend on this being 0 0 0
+        // so we dont go over the same pixels
+        // but i guess for now i only check if b==0
+        pxl[0]=0;
+        pxl[1]=0;
+        pxl[2]=200;
+    }
+    
+    printf("done y=%d, stack_size=%d\n",y, stack_size);
+    //now repeat for everyting in the stack
+    } while(stack_size!=0);
+}
 
 int main(int argc, char* argv[])
 {
@@ -72,52 +161,18 @@ int main(int argc, char* argv[])
     win = SDL_CreateWindow("vs-opening",1360,840, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN));
     SDL_SetWindowRelativeMouseMode(win,1);
     int width, height;
-    Uint64 sum=0;
-    int it=1;
+    SDL_Surface* bmp = SDL_LoadBMP("angel.bmp");
+    width = bmp->w;
+    height = bmp->h;
+    SDL_SetWindowSize(win, width, height);
     SDL_Surface* screen_surf = SDL_GetWindowSurface(win);
-    float L=.9;
-    float C=0.125;
-    float h=0.0;
-    SDL_Surface* bmp = SDL_LoadBMP("ho_lu_shit.bmp");
-    SDL_SetWindowSize(win, bmp->w, bmp->h);
-    SDL_GetWindowSize(win, &width, &height);
-    printf("%dx%d\n",width,height);
     SDL_BlitSurface(bmp, NULL, screen_surf, NULL);
-    SDL_DestroySurface(bmp);
-    int* bmp_ints=malloc(3*sizeof(int)*width*height);
-    Uint8* screen_pixels = screen_surf->pixels;
-    for(int y=0; y<height; ++y)
-    {
-        for(int x=0; x<width; ++x)
-        {
-            Uint8* b = &screen_pixels[4*x+0+y*screen_surf->pitch];
-            Uint8* g = &screen_pixels[4*x+1+y*screen_surf->pitch];
-            Uint8* r = &screen_pixels[4*x+2+y*screen_surf->pitch];
-            int ir =(int)*r-16;
-            int ig =(int)*g-16;
-            int ib =(int)*b-16;
-            int sum=ir+ig+ib;
-            *r=0;*g=0;*b=0;
-            sum;
-            if(sum<0)
-                if(-sum+64 < 255)*b=-sum+64; else *b=255;
-            else if(sum>0)
-                if(sum+64 < 255) *r=+sum+64; else *r=255;
-        }
-    }
-    SDL_SaveBMP(screen_surf,"modified_ho_lu_shit.bmp");
-    
-    for(int y=0; y<height; ++y)
-    {
-        for(int x=0; x<width; ++x)
-        {
-
-        }
-    }
-    
+    fill(screen_surf);
+    SDL_SaveBMP(screen_surf, "angel_modifried.bmp");
     //init_3d(width, height);
 
-    Uint64 start,end,delta=0;
+    int it=1;
+    Uint64 start,end,sum=0,delta=0;
     while(true)
     {
         start=SDL_GetTicksNS();
@@ -187,9 +242,8 @@ int main(int argc, char* argv[])
         it++;
         end=SDL_GetTicksNS();
         delta = end-start;
-        SDL_DelayNS(10'000'000-delta); //100fps
+        SDL_DelayNS(10000000-delta); //100fps
     }
 
     return 0;
 }
-    
