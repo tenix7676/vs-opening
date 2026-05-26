@@ -146,9 +146,13 @@ void fill(SDL_Surface* surf, SDL_Window* win)
     rect.h=1;
     SDL_FillSurfaceRect(surf, &rect, (Uint32)(SDL_Color){0,0,200,0});
     SDL_UpdateWindowSurface(win);
-    SDL_Delay(1);
+
+    char path[128];
+    static int i=0;
+    sprintf(path,"animation/%d.bmp",i++);
+    if(!SDL_SaveBMP(surf,path))
+        printf("Fuck me\n");
     
-    printf("done y=%d, stack_size=%d\n",y, stack_size);
     //now repeat for everyting in the stack
     } while(stack_size!=0);
 }
