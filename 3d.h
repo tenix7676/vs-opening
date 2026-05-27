@@ -27,5 +27,5 @@ void move_camera(float dist);
 void fly_camera(float dist);
 void strafe_camera(float dist);
 void print_scr_pos();
-void backwards_render(float dist, int sex, int sey);
+void backwards_render(float dist, float sex, float sey);
 #endif

@@ -244,7 +244,7 @@ float cam_leftright=%f;\n\
 float cam_updown=%f;\n\
 \tscr_pos=(Point3d){%f, %f, %f};\n", cam_leftright, cam_updown, scr_pos.x, scr_pos.y, scr_pos.z);
 }
-void backwards_render(float dist, int sex, int sey)
+void backwards_render(float dist, float sex, float sey)
 {
     sex -= s_w/2;
     float s_x_scale = sex * 2./s_w * v_w;
