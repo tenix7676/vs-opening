@@ -210,8 +210,13 @@ int* ff(SDL_Surface* surf)
         {
             Uint8* pxl = pxl_at(x,y,pitch,pixels_);
             pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2]-3*16;
-            if(pixels[x+width*y]<min)
-                min = pixels[x+width*y];
+        }
+    for(int y=0; y<height; ++y)
+        for(int x=0; x<width; ++x)
+        {
+            if(pixels[x+width*y] !=0 )
+                if(pixels[x+width*y]<min)
+                    min = pixels[x+width*y];
         }
     printf("min=%d\n",min);
     for(int y=0; y<height; ++y)
@@ -223,6 +228,11 @@ int* ff(SDL_Surface* surf)
 
     memcpy(fill_pixels, pixels, sizeof(int)*width*height);
 
+    int iterations = (3 * 255-1);
+    int N=0;
+    while(N < 1)
+    {
+    printf("strap yourself this shit takes 5 minutes!\n");
     Uint64 start=SDL_GetTicksNS();
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
@@ -235,13 +245,20 @@ int* ff(SDL_Surface* surf)
                 fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels);
                 if(filled_pixels != 0)
                 {
-                    if(filled_pixels < 10)
+                    if(filled_pixels < 69 && weight > 3*16)
                     {
                         static int points=0;
-                        
-                        printf("\rDone %d points out of %d pixels %.1f%%\n", ++points, x+y*width+1, 100*(float)(x+y*width+1) / (width*height));
+                        Uint64 end=SDL_GetTicksNS();
+                        float time=SDL_NS_TO_MS((float)end-start)/1000;
+                        printf("\rDone %d points out of %d pixels %.1f%% time taken: %.2fs", ++points, x+y*width+1, 100*(float)(x+y*width+1) / (width*height), time);
                         fflush(stdout);
-                        backwards_render(420/weight, avg_x, avg_y);
+                        
+                        for(int i=0; i <N; ++i)
+                        {
+                            printf("wtf\n");
+                            weight+=M_PI*(sqrtf(filled_pixels / M_PI)-1+i) * (N-i); //add on the deleted pixels very aproximately
+                        }
+                        backwards_render((4.20*69)/weight, avg_x, avg_y);
                         memcpy(pixels, fill_pixels, sizeof(int)*width*height);
                     }
                     else
@@ -249,9 +266,24 @@ int* ff(SDL_Surface* surf)
                 }
             }
         }
-    printf("100%% Done\n!");
-
-    //update_surf(pixels, surf);
+    printf("\a\n100%% Done!\n");
+    N++;
+    for(int y=0; y<height; ++y)
+        for(int x=0; x<width; ++x)
+        {
+            if(pixels[x+width*y] != 0)
+            {
+                pixels[x+width*y]-=1;
+            }
+        }
+    char out_path[64];
+    sprintf(out_path, "holyshit_after_%d_pass.bmp", N);
+    update_surf(pixels, surf);
+    SDL_SaveBMP(surf, out_path);
+    save_points();
+    }
+     
+    
     return pixels;
 }
 

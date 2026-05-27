@@ -28,4 +28,5 @@ void fly_camera(float dist);
 void strafe_camera(float dist);
 void print_scr_pos();
 void backwards_render(float dist, float sex, float sey);
+void save_points();
 #endif

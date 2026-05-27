@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "3d.h"
 #include "oklab.h"
+#include <string.h> //for memcpy
 
 void update_scr_pos();
 void update_cam_pos();
@@ -33,6 +34,7 @@ Point3d s_y, s_x;
 size_t point_count=0;
 Point3d* points=NULL;
 SDL_Rect* rects=NULL;
+float* dists=NULL;
 
 void init_3d(int s_w_, int s_h_)
 {
@@ -110,6 +112,7 @@ void init_points()
 
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
+    dists = malloc(sizeof(SDL_Rect)*point_count);
 }
 void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
 {
@@ -269,5 +272,19 @@ void backwards_render(float dist, float sex, float sey)
     p.z += cam_pos.z;
     
     static int n=0;
+    if(n<point_count) dists[n]=dist; 
     if(n<point_count) points[n++]=p;
+}
+
+void save_points()
+{
+    SDL_IOStream* file = SDL_IOFromFile("points_array", "w");
+    size_t size = sizeof(int)+sizeof(Point3d)*point_count+sizeof(float)*point_count;
+    int* p = malloc(size);
+    p[0] = point_count;
+    memcpy((p+1), points, point_count);
+    Point3d* p_ = p+1;
+    memcpy(p_+point_count, dists, point_count);
+    SDL_WriteIO(file, points, size);
+    SDL_FlushIO(file);
 }
