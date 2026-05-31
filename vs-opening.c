@@ -259,7 +259,8 @@ int* ff(SDL_Surface* surf)
                             weight+=M_PI*(sqrtf(filled_pixels / M_PI)-1+i) * (N-i); //add on the deleted pixels very aproximately
                         }
                         backwards_render((4.20*69)/weight, avg_x, avg_y);
-                        memcpy(pixels, fill_pixels, sizeof(int)*width*height);
+                        memcpy(pixels, fill_pixels, sizeof(int)*width*height); // i should find the min/ max x/ y the fill
+                        // algorithm affected and only memcpy that area.
                     }
                     else
                         memcpy(fill_pixels, pixels, sizeof(int)*width*height);
