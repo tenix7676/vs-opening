@@ -274,6 +274,7 @@ void backwards_render(float dist, float sex, float sey)
     static int n=0;
     if(n<point_count) dists[n]=dist; 
     if(n<point_count) points[n++]=p;
+    else printf("POINTS OVERFLOW rip\n");
 }
 
 void save_points()
