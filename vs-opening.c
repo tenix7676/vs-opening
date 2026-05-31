@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
+// when compiling with /MDd (debug) screen black, there are no points visible :(
+
 typedef struct Button
 {
     int down;
@@ -34,10 +36,15 @@ Uint8* pxl_at(int x, int y, int pitch, Uint8* pixels)
     return &pixels[4*x+pitch*y];
 }
 
-SDL_Point stack[256];
-void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, float* avg_y, float* weight, int* filled_pixels)
+#define MAX_STACK_SIZE 4*1024
+SDL_Point stack[MAX_STACK_SIZE];
+void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, float* avg_y, float* weight, int* filled_pixels, SDL_Point* min, SDL_Point* max)
 {
     *filled_pixels=0;
+    min->x=x0;
+    min->y=y0;
+    max->x=x0;
+    max->y=y0;
     
     *avg_x=0;
     *avg_y=0;
@@ -83,6 +90,8 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         int bottom = 0;
         while(bottom <= 2)
         {
+            if(stack_size >= MAX_STACK_SIZE-10)
+                printf("MAX_STACK_SIZE about to be exceeded! ABORT! \n");
             if(x-1 < 0)
             {
                 if(y-1+bottom >= 0 && y-1+bottom < height)
@@ -143,7 +152,10 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         
         pixels[x + (y)*width] = 0;
     }
-
+    if(start_x < min->x) min->x=start_x;
+    if(end_x > max->x)   max->x=end_x;
+    if(y < min->y)       min->y=y;
+    if(y > max->y)       max->y=y;
     //now repeat for everyting in the stack
     } while(stack_size!=0);
     
@@ -196,6 +208,15 @@ void increase_by_one(int* pixels, SDL_Surface* surf)
     update_surf(pixels, surf);
 }
 
+void memcpy_area(int* to, int* from, SDL_Point* min, SDL_Point* max)
+{
+    for(int y=min->y; y <= max->y; ++y)
+    {
+        size_t length = 1 + max->x - min->x;
+        memcpy(to, from, sizeof(int)*length);
+    }
+}
+
 int* ff(SDL_Surface* surf)
 {
     Uint8* pixels_= surf->pixels;
@@ -240,9 +261,10 @@ int* ff(SDL_Surface* surf)
             if(pixels[x+width*y]!=0)
             {
                 int filled_pixels;
+                SDL_Point min, max;
                 float avg_x, avg_y;
                 float weight;
-                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels);
+                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max);
                 if(filled_pixels != 0)
                 {
                     if(filled_pixels < 69 && weight > 3*16)
@@ -256,18 +278,21 @@ int* ff(SDL_Surface* surf)
                         for(int i=0; i <N; ++i)
                         {
                             printf("wtf\n");
-                            weight+=M_PI*(sqrtf(filled_pixels / M_PI)-1+i) * (N-i); //add on the deleted pixels very aproximately
+                            //weight+=M_PI*(sqrtf(filled_pixels / M_PI)-1+i) * (N-i); //add on the deleted pixels very aproximately
                         }
-                        backwards_render((4.20*69)/weight, avg_x, avg_y);
-                        memcpy(pixels, fill_pixels, sizeof(int)*width*height); // i should find the min/ max x/ y the fill
-                        // algorithm affected and only memcpy that area.
+                        backwards_render((6.9*4.20*69)/weight, avg_x, avg_y);
+                        memcpy_area(pixels, fill_pixels, &min, &max);
                     }
                     else
-                        memcpy(fill_pixels, pixels, sizeof(int)*width*height);
+                        memcpy_area(fill_pixels, pixels, &min, &max);
                 }
             }
         }
     printf("\a\n100%% Done!\n");
+    Uint64 end=SDL_GetTicksNS();
+    float time=SDL_NS_TO_MS((float)end-start)/1000;
+    printf("time taken: %.2fs\n", time);
+
     N++;
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
