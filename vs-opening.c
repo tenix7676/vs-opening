@@ -118,7 +118,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
                         pxl_topleft = &pixels[x-1 + (y-1+bottom)*width];
                         pxl_top = &pixels[x + (y-1+bottom)*width];
                         if(*pxl_top !=0 &&
-                           *pxl_topleft != 0) //this is needed so that we dont do the same pxl second time below
+                           *pxl_topleft != 0) //this is needed so that we dont do the same pxl second time later
                         {
                             stack[stack_size]=(SDL_Point){x,y-1+bottom};
                             stack_size++;
@@ -126,7 +126,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
                     }
                 }
             }
-            
+//later:            
             if(y-1+bottom >= 0 && y-1+bottom < height)
             {
                 //add top/ bottom
@@ -349,11 +349,12 @@ int main(int argc, char* argv[])
     
     SDL_UpdateWindowSurface(win);
     
-    //int* pixels = ff(screen_surf);
-    saving_points_test(screen_surf);
+    int* pixels = ff(screen_surf);
     
     SDL_SetWindowRelativeMouseMode(win,1);
-        
+    
+    SDL_DisableScreenSaver();
+    
     int it=1;
     Uint64 start,end,sum=0,delta=0;
     while(true)

@@ -112,7 +112,7 @@ void init_points()
 
     points = malloc(point_count*sizeof(Point3d));
     rects = malloc(sizeof(SDL_Rect)*point_count);
-    dists = malloc(sizeof(SDL_Rect)*point_count);
+    dists = malloc(sizeof(float)*point_count);
 }
 void draw_pixel(unsigned char* pixels, int pitch, int x, int y, unsigned char r,  unsigned char g,  unsigned char b)
 {
@@ -274,13 +274,21 @@ void backwards_render(float dist, float sex, float sey)
     static int n=0;
     if(n<point_count) dists[n]=dist; 
     if(n<point_count) points[n++]=p;
-    else printf("POINTS OVERFLOW rip\n");
+    if(n==point_count) //not tested idc
+    {        
+        printf("resizing points array\n");
+        point_count*=2;
+        
+        points = realloc(points, points_count*sizeof(Point3d));
+        rects = realloc(rects, sizeof(SDL_Rect)*point_count);
+        dists = realloc(dists, sizeof(float)*point_count);
+    }
 }
 
 void save_points()
 {
     size_t size = 64+sizeof(Point3d)*point_count+sizeof(float)*point_count;
-    char* p = malloc(size);
+    char* p = malloc(size); // i guess instead of creating this one big chunk of memory we can use write and the and then append operations to write this data and 2 arrays but im not gonna update it now bruh
     memset(p, '.', 64);
     sprintf(p,"%d\n", point_count);
     memcpy(p+64                            , points, sizeof(Point3d)*point_count);
