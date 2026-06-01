@@ -82,11 +82,13 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         Uint8* pxl_topleft;
         if(x < 0 || x >= width)
         {
+            x++;
             break;
         }
         pxl = &pixels[x + (y)*width];
         if(*pxl == 0)
         {
+            x++;
             break;
         }
         int bottom = 0;
