@@ -15,6 +15,7 @@ void update_cam_dir();
 int cam_dist;
 Point3d cam_dir;
 Point3d cam_pos;
+Point3d initial_cam_pos;
 Point3d scr_pos; 
 float cam_leftright=0;
 float cam_updown=0.0f;
@@ -45,6 +46,7 @@ void init_3d(int s_w_, int s_h_)
     update_cam_dir();
     scr_pos=(Point3d){-1, 0, 0};
     update_cam_pos(scr_pos);
+    initial_cam_pos = cam_pos;
     
     init_points();
 }
@@ -267,9 +269,9 @@ void backwards_render(float dist, float sex, float sey)
     p.y *= dist;
     p.z *= dist;
     
-    p.x += cam_pos.x;
-    p.y += cam_pos.y;
-    p.z += cam_pos.z;
+    p.x += initial_cam_pos.x;
+    p.y += initial_cam_pos.y;
+    p.z += initial_cam_pos.z;
     
     static int n=0;
     if(n<point_count) dists[n]=dist; 
@@ -283,6 +285,31 @@ void backwards_render(float dist, float sex, float sey)
         rects = realloc(rects, sizeof(SDL_Rect)*point_count);
         dists = realloc(dists, sizeof(float)*point_count);
     }
+}
+
+void change_dist_exponent(float exp)
+{
+    static old_exp=1;
+    for(int i=0; i < point_count; ++i)
+    {
+        points[i].x -= initial_cam_pos.x;
+        points[i].y -= initial_cam_pos.y;
+        points[i].z -= initial_cam_pos.z;
+        //this is really stupid
+        // but i dont want to make 2 copies of the arrays
+        points[i].x /= powf(dists[i], old_exp);
+        points[i].y /= powf(dists[i], old_exp);
+        points[i].z /= powf(dists[i], old_exp);
+        
+        points[i].x *= powf(dists[i], exp);
+        points[i].y *= powf(dists[i], exp);
+        points[i].z *= powf(dists[i], exp);
+        
+        points[i].x += initial_cam_pos.x;
+        points[i].y += initial_cam_pos.y;
+        points[i].z += initial_cam_pos.z;
+    }
+    old_exp=exp;
 }
 
 void save_points()

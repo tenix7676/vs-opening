@@ -351,8 +351,8 @@ int main(int argc, char* argv[])
     
     SDL_UpdateWindowSurface(win);
     
-    int* pixels = ff(screen_surf);
-    //load_points();
+    //int* pixels = ff(screen_surf);
+    load_points();
     
     SDL_SetWindowRelativeMouseMode(win,1);
     
@@ -427,8 +427,11 @@ int main(int argc, char* argv[])
         
         bool* keyboard = SDL_GetKeyboardState(NULL);
         static int decreased=0;
+        static float exponent=1;
         if(keyboard[SDL_SCANCODE_MINUS]) { printf("Decreasing... now at %d\n", ++decreased); }//decrease_by_one(pixels, screen_surf);}
         if(keyboard[SDL_SCANCODE_EQUALS]) { printf("Increasing... now at %d\n", --decreased); }//increase_by_one(pixels, screen_surf);}
+        if(keyboard[SDL_SCANCODE_Q]) { exponent/=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
+        if(keyboard[SDL_SCANCODE_E]) { exponent*=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
         
         SDL_ClearSurface(screen_surf, 0,0,0,0);
         draw_screen_one_color(screen_surf);
