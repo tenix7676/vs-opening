@@ -112,7 +112,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
             else
             {
                 pxl_behind = &pixels[x-1 + (y)*width];
-                if(*pxl_behind == 0)
+                if(*pxl_behind == 0)//I think this might be always true
                 {
                     if(y-1+bottom >= 0 && y-1+bottom < height)
                     {
@@ -120,7 +120,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
                         pxl_topleft = &pixels[x-1 + (y-1+bottom)*width];
                         pxl_top = &pixels[x + (y-1+bottom)*width];
                         if(*pxl_top !=0 &&
-                           *pxl_topleft != 0) //this is needed so that we dont do the same pxl second time later
+                           *pxl_topleft != 0) //this is needed so that we dont do the same Point on the stack second time later
                         {
                             stack[stack_size]=(SDL_Point){x,y-1+bottom};
                             stack_size++;
@@ -128,12 +128,12 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
                     }
                 }
             }
-//later:            
             if(y-1+bottom >= 0 && y-1+bottom < height)
             {
                 //add top/ bottom
                 pxl_topleft = &pixels[x-1 + (y-1+bottom)*width];
                 pxl_top = &pixels[x + (y-1+bottom)*width];
+//later:            
                 if(*pxl_top !=0 &&
                    *pxl_topleft==0)
                 {
