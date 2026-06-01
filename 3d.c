@@ -289,7 +289,7 @@ void backwards_render(float dist, float sex, float sey)
 
 void change_dist_exponent(float exp)
 {
-    static old_exp=1;
+    static float old_exp=1;
     for(int i=0; i < point_count; ++i)
     {
         points[i].x -= initial_cam_pos.x;
