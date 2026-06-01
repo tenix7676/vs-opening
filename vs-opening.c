@@ -9,7 +9,9 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
-// when compiling with /MDd (debug) screen black, there are no points visible :(
+// TODO Maybe multithreading
+// TODO, after 2nd pass some pixels that have should be flooded are not?
+//   like single pixels?? weird
 
 typedef struct Button
 {
@@ -217,6 +219,22 @@ void memcpy_area(int* to, int* from, int width, SDL_Point* min, SDL_Point* max)
     }
 }
 
+void saving_points_test(SDL_Surface* surf)
+{
+    Uint8* pixels_= surf->pixels;
+    int width     = surf->w;
+    int height    = surf->h;
+    int pitch     = surf->pitch;
+    for(int y=0; y<height; y+=32)
+        for(int x=0; x<width; x+=32)
+        {
+            backwards_render((x+y)/1000., x, y);
+        }
+    save_points();
+    reset_points();
+    load_points();
+}
+
 int* ff(SDL_Surface* surf)
 {
     Uint8* pixels_= surf->pixels;
@@ -331,7 +349,8 @@ int main(int argc, char* argv[])
     
     SDL_UpdateWindowSurface(win);
     
-    int* pixels = ff(screen_surf);
+    //int* pixels = ff(screen_surf);
+    saving_points_test(screen_surf);
     
     SDL_SetWindowRelativeMouseMode(win,1);
         
@@ -396,8 +415,8 @@ int main(int argc, char* argv[])
         
         bool* keyboard = SDL_GetKeyboardState(NULL);
         static int decreased=0;
-        if(keyboard[SDL_SCANCODE_MINUS]) { printf("Decreasing... now at %d\n", ++decreased); decrease_by_one(pixels, screen_surf);}
-        if(keyboard[SDL_SCANCODE_EQUALS]) { printf("Increasing... now at %d\n", --decreased); increase_by_one(pixels, screen_surf);}
+        if(keyboard[SDL_SCANCODE_MINUS]) { printf("Decreasing... now at %d\n", ++decreased); }//decrease_by_one(pixels, screen_surf);}
+        if(keyboard[SDL_SCANCODE_EQUALS]) { printf("Increasing... now at %d\n", --decreased); }//increase_by_one(pixels, screen_surf);}
         
         SDL_ClearSurface(screen_surf, 0,0,0,0);
         draw_screen_one_color(screen_surf);

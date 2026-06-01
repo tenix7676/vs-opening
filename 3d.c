@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "3d.h"
 #include "oklab.h"
-#include <string.h> //for memcpy
+#include <string.h> //for memcpy and memset
 
 void update_scr_pos();
 void update_cam_pos();
@@ -279,13 +279,33 @@ void backwards_render(float dist, float sex, float sey)
 
 void save_points()
 {
-    SDL_IOStream* file = SDL_IOFromFile("points_array", "w");
-    size_t size = sizeof(int)+sizeof(Point3d)*point_count+sizeof(float)*point_count;
-    int* p = malloc(size);
-    p[0] = point_count;
-    memcpy((p+1), points, point_count);
-    Point3d* p_ = p+1;
-    memcpy(p_+point_count, dists, point_count);
-    SDL_WriteIO(file, points, size);
-    SDL_FlushIO(file);
+    size_t size = 64+sizeof(Point3d)*point_count+sizeof(float)*point_count;
+    char* p = malloc(size);
+    memset(p, '.', 64);
+    sprintf(p,"%d\n", point_count);
+    memcpy(p+64                            , points, sizeof(Point3d)*point_count);
+    memcpy(p+64+sizeof(Point3d)*point_count, dists, sizeof(float)*point_count);
+    SDL_SaveFile("points_array.txt", p, size);
+    free(p);
+}
+
+void reset_points()
+{
+    for(int i=0; i < point_count; ++i)
+    {
+        points[i].x=0;
+        points[i].y=0;
+        points[i].z=0;
+    }
+}
+    
+void load_points()
+{
+    size_t data_size;
+    char* p = SDL_LoadFile("points_array.txt", &data_size);
+    point_count=atoi(p);
+    //printf("loaded point_count == %d\n",point_count);
+    memcpy(points, p+64,                             sizeof(Point3d)*point_count);
+    memcpy(dists,  p+64+sizeof(Point3d)*point_count, sizeof(float)*point_count);
+    SDL_free(p);
 }
