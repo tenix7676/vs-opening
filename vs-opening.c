@@ -9,8 +9,8 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
-// TODO Maybe multithreading
-// TODO, after 2nd pass some pixels that have should be flooded are not?
+// TODO: maybe this creates wrong results:
+//   after 2nd pass some pixels that have should be flooded are not?
 //   like single pixels?? weird
 
 typedef struct Button
@@ -62,7 +62,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     int x=stack[stack_size-1].x;
     int y=stack[stack_size-1].y;
     stack_size--;
-    while(1) //leftmost fill_x
+    while(1) //leftmost x
     {
         if(x-1 < 0)
             break;
@@ -99,7 +99,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
                 if(y-1+bottom >= 0 && y-1+bottom < height)
                 {
                     //add top/ bottom
-                    pxl_top = &pixels[x-1 + (y-1+bottom)*width];
+                    pxl_top = &pixels[x + (y-1+bottom)*width];
                     if(*pxl_top !=0)
                     {
                         stack[stack_size]=(SDL_Point){x,y-1+bottom};
@@ -290,7 +290,7 @@ int* ff(SDL_Surface* surf)
                 {
                     if(filled_pixels < 69 && weight > 3*16)
                     {
-                        for(int i=0; i <N; ++i)
+                        for(int i=0; i <N; ++i) //TODO: maybe this creates wrong results 
                         {
                             weight+=M_PI*(sqrtf(filled_pixels / M_PI)-1+i) * (N-i); //add on the deleted pixels very aproximately
                         }
@@ -320,7 +320,7 @@ int* ff(SDL_Surface* surf)
     sprintf(out_path, "passes/holyshit_after_%d_pass.bmp", N);
     update_surf(pixels, surf);
     SDL_SaveBMP(surf, out_path);
-    save_points();// NOW THIS FUNCTION IS REALLY IMPORTANT, I HAVE TO TEST IT WITH A LOADER!!!!!
+    save_points();
     
     end=SDL_GetTicksNS();
     time=SDL_NS_TO_MS((float)end-start)/1000;
@@ -350,11 +350,13 @@ int main(int argc, char* argv[])
     SDL_UpdateWindowSurface(win);
     
     int* pixels = ff(screen_surf);
+    //load_points();
     
     SDL_SetWindowRelativeMouseMode(win,1);
     
     SDL_DisableScreenSaver();
     
+    float flyinGspeed=0.0006;
     int it=1;
     Uint64 start,end,sum=0,delta=0;
     while(true)
@@ -367,6 +369,13 @@ int main(int argc, char* argv[])
                 return 0;
             if(e.type == SDL_EVENT_MOUSE_MOTION)
                 turn_camera(e.motion.xrel,e.motion.yrel);
+            if(e.type == SDL_EVENT_MOUSE_WHEEL)
+            {
+                if(e.wheel.y > 0)
+                    flyinGspeed *= 1.125;
+                else
+                    flyinGspeed /= 1.125;
+            }
             if(e.type == SDL_EVENT_KEY_DOWN)
             {
                 int i=0;
@@ -402,7 +411,7 @@ int main(int argc, char* argv[])
         {
         int i=0;
         i++;
-        const float flyinGspeed=0.006;
+        
         if(buttons[i].held) { move_camera(flyinGspeed); } ++i;
         if(buttons[i].held) { move_camera(-flyinGspeed); } ++i;
         if(buttons[i].held) { strafe_camera(flyinGspeed); } ++i;

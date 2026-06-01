@@ -159,7 +159,7 @@ float check_point(Point3d* point, int* sex, int* sey)
 
     return len_p1;
 }
-#define DIST_SCALING 2
+#define DIST_SCALING .125
 void draw_screen(SDL_Surface* surface)
 {
     static float L=.9;
@@ -279,7 +279,7 @@ void backwards_render(float dist, float sex, float sey)
         printf("resizing points array\n");
         point_count*=2;
         
-        points = realloc(points, points_count*sizeof(Point3d));
+        points = realloc(points, point_count*sizeof(Point3d));
         rects = realloc(rects, sizeof(SDL_Rect)*point_count);
         dists = realloc(dists, sizeof(float)*point_count);
     }
@@ -310,7 +310,7 @@ void reset_points()
 void load_points()
 {
     size_t data_size;
-    char* p = SDL_LoadFile("points_array.txt", &data_size);
+    char* p = SDL_LoadFile("done_points_array.txt", &data_size);
     point_count=atoi(p);
     //printf("loaded point_count == %d\n",point_count);
     memcpy(points, p+64,                             sizeof(Point3d)*point_count);
