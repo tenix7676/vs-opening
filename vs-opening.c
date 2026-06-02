@@ -13,6 +13,14 @@
 //   after 2nd pass some pixels that have should be flooded are not?
 //   like single pixels?? weird
 
+//3_points_array.txt:
+//The points are too quickly coming towaards the camera
+// they should be furtther
+
+//4_points_array.txt:
+//Okay now it looks like the first idea i had
+//  but shittier bruh
+
 typedef struct Button
 {
     int down;
@@ -269,6 +277,7 @@ int* ff(SDL_Surface* surf)
 
     memcpy(fill_pixels, pixels, sizeof(int)*width*height);
 
+    //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
     int iterations = (3 * 255-1);
     int N=0;
     int added_points=0;
@@ -294,7 +303,7 @@ int* ff(SDL_Surface* surf)
                     {
                         for(int i=0; i <N; ++i) //TODO: maybe this creates wrong results 
                         {
-                            weight+=M_PI*(sqrtf(filled_pixels / M_PI)-1+i) * (N-i); //add on the deleted pixels very aproximately
+                            weight+=1;//M_PI*(sqrtf(filled_pixels / M_PI)-1+i);// * (N-i); //add on the deleted pixels very aproximately
                         }
                         added_points++;
                         added_points_this_N++;
@@ -351,8 +360,8 @@ int main(int argc, char* argv[])
     
     SDL_UpdateWindowSurface(win);
     
-    //int* pixels = ff(screen_surf);
-    load_points();
+    int* pixels = ff(screen_surf);
+    //load_points();
     
     SDL_SetWindowRelativeMouseMode(win,1);
     
@@ -428,10 +437,12 @@ int main(int argc, char* argv[])
         bool* keyboard = SDL_GetKeyboardState(NULL);
         static int decreased=0;
         static float exponent=1;
+        static int fps_toggled=0;
         if(keyboard[SDL_SCANCODE_MINUS]) { printf("Decreasing... now at %d\n", ++decreased); }//decrease_by_one(pixels, screen_surf);}
         if(keyboard[SDL_SCANCODE_EQUALS]) { printf("Increasing... now at %d\n", --decreased); }//increase_by_one(pixels, screen_surf);}
         if(keyboard[SDL_SCANCODE_Q]) { exponent/=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
         if(keyboard[SDL_SCANCODE_E]) { exponent*=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
+        if(keyboard[SDL_SCANCODE_F]) fps_toggled=!fps_toggled;
         
         SDL_ClearSurface(screen_surf, 0,0,0,0);
         draw_screen_one_color(screen_surf);
@@ -439,6 +450,7 @@ int main(int argc, char* argv[])
         sum+=delta;
         if(it>=10)
         {
+            if(fps_toggled)
             printf("avg: %.3fms\n",SDL_NS_TO_MS(sum/(float)it));
             it=0;
             sum=0;
