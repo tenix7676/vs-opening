@@ -303,7 +303,7 @@ int* ff(SDL_Surface* surf)
                     {
                         for(int i=0; i <N; ++i) //TODO: maybe this creates wrong results 
                         {
-                            weight+=1;//M_PI*(sqrtf(filled_pixels / M_PI)-1+i);// * (N-i); //add on the deleted pixels very aproximately
+                            ;//weight+=1;//M_PI*(sqrtf(filled_pixels / M_PI)-1+i);// * (N-i); //add on the deleted pixels very aproximately
                         }
                         added_points++;
                         added_points_this_N++;
