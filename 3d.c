@@ -203,6 +203,8 @@ void draw_screen_one_color(SDL_Surface* surface)
     for(size_t i=0; i < point_count; ++i)
     {
         int sex, sey;
+        if(dists[i] > 2.5)
+            continue;
         float len_p1 = check_point(points+i,&sex,&sey);
         if(len_p1 > 0)
         {

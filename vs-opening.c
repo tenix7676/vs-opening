@@ -360,8 +360,8 @@ int main(int argc, char* argv[])
     
     SDL_UpdateWindowSurface(win);
     
-    int* pixels = ff(screen_surf);
-    //load_points();
+    //int* pixels = ff(screen_surf);
+    load_points();
     
     SDL_SetWindowRelativeMouseMode(win,1);
     
