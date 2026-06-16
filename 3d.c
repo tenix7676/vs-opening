@@ -203,8 +203,8 @@ void draw_screen_one_color(SDL_Surface* surface)
     for(size_t i=0; i < point_count; ++i)
     {
         int sex, sey;
-        if(dists[i] > 2.5)
-            continue;
+        //if(dists[i] > 2.5)
+        //    continue;
         float len_p1 = check_point(points+i,&sex,&sey);
         if(len_p1 > 0)
         {
@@ -339,7 +339,7 @@ void reset_points()
 void load_points()
 {
     size_t data_size;
-    char* p = SDL_LoadFile("done_points_array.txt", &data_size);
+    char* p = SDL_LoadFile("done_points_array_.txt", &data_size);
     point_count=atoi(p);
     //printf("loaded point_count == %d\n",point_count);
     memcpy(points, p+64,                             sizeof(Point3d)*point_count);

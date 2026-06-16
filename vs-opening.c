@@ -21,6 +21,16 @@
 //Okay now it looks like the first idea i had
 //  but shittier bruh
 
+//TODO: also why is the visual studio text
+// rendered as a lot of points?
+// shouldnt it be one very close point?
+
+//TODO: make the flood thicker by 1 pixl
+// so it captures some pixels even if they are not perfectly
+// neighbouring. Maybe allow diagonal connections?
+// Either that or make fuzzy border, so we can catch some more pixels
+
+
 typedef struct Button
 {
     int down;
