@@ -58,8 +58,9 @@ Uint8* pxl_at(int x, int y, int pitch, Uint8* pixels)
 
 #define MAX_STACK_SIZE 4*1024
 SDL_Point stack[MAX_STACK_SIZE];
-void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, float* avg_y, float* weight, int* filled_pixels, SDL_Point* min, SDL_Point* max)
+void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, float* avg_y, float* weight, int* filled_pixels, SDL_Point* min, SDL_Point* max, int filled_pixels_max)
 {
+    int filled_pixels_=0;
     *filled_pixels=0;
     min->x=x0;
     min->y=y0;
@@ -101,12 +102,14 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         if(x < 0 || x >= width)
         {
             x++;
+            if(++filled_pixels_ >= filled_pixels_max) return;
             break;
         }
         pxl = &pixels[x + (y)*width];
         if(*pxl == 0)
         {
             x++;
+            if(++filled_pixels_ >= filled_pixels_max) return;
             break;
         }
         int bottom = 0;
@@ -162,6 +165,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
             bottom+=2;
         }
         x++;
+        if(++filled_pixels_ >= filled_pixels_max) return;
     }
     end_x=x-1;
     *filled_pixels+=end_x-start_x+1;
@@ -202,7 +206,7 @@ void update_surf(int* pixels, SDL_Surface* surf)
             if(pixels[x+width*y] > 0)
                 pxl[2]=fmin(69+255*sqrtf(fabs(pixels[x+width*y]) / (3. * 255)),255);
             else if(pixels[x+width*y] < 0)
-                pxl[0]=0*fmin(69+255*sqrtf(fabs(pixels[x+width*y]) / (3. * 255)),255);
+                pxl[0]=fmin(69+255*sqrtf(fabs(pixels[x+width*y]) / (3. * 255)),255);
         } 
 }
 
@@ -255,104 +259,6 @@ void saving_points_test(SDL_Surface* surf)
     load_points();
 }
 
-int* ff(SDL_Surface* surf)
-{
-    Uint8* pixels_= surf->pixels;
-    int width     = surf->w;
-    int height    = surf->h;
-    int pitch     = surf->pitch;
-    int* pixels = malloc(sizeof(int)*width*height);
-    int* fill_pixels = malloc(sizeof(int)*width*height);
-    int min=0;
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            Uint8* pxl = pxl_at(x,y,pitch,pixels_);
-            pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2]-3*16;
-        }
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            if(pixels[x+width*y] !=0 )
-                if(pixels[x+width*y]<min)
-                    min = pixels[x+width*y];
-        }
-    printf("min=%d\n",min);
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            if(pixels[x+width*y] !=0 )
-                pixels[x+width*y] += -min;
-        }
-
-    memcpy(fill_pixels, pixels, sizeof(int)*width*height);
-
-    //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
-    int iterations = (3 * 255-1);
-    int N=0;
-    int added_points=0;
-    int added_points_this_N=0;
-    Uint64 end, start=SDL_GetTicksNS();
-    float time;
-    while(N < iterations)
-    {
-    added_points_this_N=0;
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            if(pixels[x+width*y]!=0)
-            {
-                int filled_pixels;
-                SDL_Point min, max;
-                float avg_x, avg_y;
-                float weight;
-                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max);
-                if(filled_pixels != 0)
-                {
-                    if(filled_pixels < 69 && weight > 3*16)
-                    {
-                        for(int i=0; i <N; ++i) //TODO: maybe this creates wrong results 
-                        {
-                            ;//weight+=1;//M_PI*(sqrtf(filled_pixels / M_PI)-1+i);// * (N-i); //add on the deleted pixels very aproximately
-                        }
-                        added_points++;
-                        added_points_this_N++;
-                        backwards_render((6.9*4.20*69)/weight, avg_x, avg_y);
-                        memcpy_area(pixels, fill_pixels, width, &min, &max);
-                    }
-                    else
-                        memcpy_area(fill_pixels, pixels, width, &min, &max);
-                }
-                end=SDL_GetTicksNS();
-                time=SDL_NS_TO_MS((float)end-start)/1000;
-                printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
-            }
-        }
-
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            if(pixels[x+width*y] != 0)
-            {
-                pixels[x+width*y]-=1;
-            }
-        }
-    char out_path[64];
-    sprintf(out_path, "passes/holyshit_after_%d_pass.bmp", N);
-    update_surf(pixels, surf);
-    SDL_SaveBMP(surf, out_path);
-    save_points();
-    
-    end=SDL_GetTicksNS();
-    time=SDL_NS_TO_MS((float)end-start)/1000;
-    printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%\n",N, added_points_this_N, added_points, time, 100.f);
-    N++;
-    }
-    
-    return pixels;
-}
-
-
 int main(int argc, char* argv[])
 {
     SDL_Window* win;
@@ -369,11 +275,11 @@ int main(int argc, char* argv[])
     init_3d(width, height);
     
     SDL_UpdateWindowSurface(win);
-    
+    SDL_Delay(100);
     //int* pixels = ff(screen_surf);
-    load_points();
+    //load_points();
     
-    SDL_SetWindowRelativeMouseMode(win,1);
+    //SDL_SetWindowRelativeMouseMode(win,1);
     
     SDL_DisableScreenSaver();
     
@@ -445,7 +351,7 @@ int main(int argc, char* argv[])
         reset_buttons();
         
         bool* keyboard = SDL_GetKeyboardState(NULL);
-        static int decreased=0;
+        static int decreased=69;
         static float exponent=1;
         static int fps_toggled=0;
         if(keyboard[SDL_SCANCODE_MINUS]) { printf("Decreasing... now at %d\n", ++decreased); }//decrease_by_one(pixels, screen_surf);}
@@ -454,9 +360,93 @@ int main(int argc, char* argv[])
         if(keyboard[SDL_SCANCODE_E]) { exponent*=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
         if(keyboard[SDL_SCANCODE_F]) fps_toggled=!fps_toggled;
         
-        SDL_ClearSurface(screen_surf, 0,0,0,0);
-        draw_screen_one_color(screen_surf);
-        SDL_UpdateWindowSurface(win);
+        //SDL_ClearSurface(screen_surf, 0,0,0,0);
+       
+{
+    SDL_BlitSurface(bmp, NULL, screen_surf, NULL);
+    SDL_Surface* surf=screen_surf;
+    Uint8* pixels_= surf->pixels;
+    int width     = surf->w;
+    int height    = surf->h;
+    int pitch     = surf->pitch;
+    int* pixels = malloc(sizeof(int)*width*height);
+    int* fill_pixels = malloc(sizeof(int)*width*height);
+    for(int y=0; y<height; ++y)
+        for(int x=0; x<width; ++x)
+        {
+            Uint8* pxl = pxl_at(x,y,pitch,pixels_);
+            if(pxl[0]==16&&pxl[1]==16&&pxl[2]==16) pixels[x+width*y]=0;
+            else pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2];
+        }
+    
+    memcpy(fill_pixels, pixels, sizeof(int)*width*height);
+
+    update_surf(fill_pixels, surf);
+    SDL_UpdateWindowSurface(win);
+    SDL_Delay(1500);
+    //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
+    int iterations = (3 * 255-1);
+    int N=0;
+    int added_points=0;
+    int added_points_this_N=0;
+    Uint64 end, start=SDL_GetTicksNS();
+    float time;
+    {
+    added_points_this_N=0;
+    for(int y=0; y<height; ++y)
+        for(int x=0; x<width; ++x)
+        {
+            if(pixels[x+width*y]!=0)
+            {
+                int filled_pixels;
+                SDL_Point min, max;
+                float avg_x, avg_y;
+                float weight;
+                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, decreased);
+                if(filled_pixels != 0)
+                {
+                    if(filled_pixels < decreased) //&& weight > 3*16)
+                    {
+                        for(int i=0; i <N; ++i) //TODO: maybe this creates wrong results 
+                        {
+                            ;//weight+=1;//M_PI*(sqrtf(filled_pixels / M_PI)-1+i);// * (N-i); //add on the deleted pixels very aproximately
+                        }
+                        added_points++;
+                        added_points_this_N++;
+                        //backwards_render((6.9*4.20*69)/weight, avg_x, avg_y);
+                        memcpy_area(pixels, fill_pixels, width, &min, &max);
+                    }
+                }
+                else
+                    memcpy_area(fill_pixels, pixels, width, &min, &max);
+                end=SDL_GetTicksNS();
+                time=SDL_NS_TO_MS((float)end-start)/1000;
+                printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
+            }
+        }
+
+    update_surf(fill_pixels, surf);
+    SDL_UpdateWindowSurface(win);
+
+    end=SDL_GetTicksNS();
+    time=SDL_NS_TO_MS((float)end-start)/1000;
+    printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%\n",N, added_points_this_N, added_points, time, 100.f);
+
+    free(pixels);
+    free(fill_pixels);//its dumb i know... im just hacking this quickly
+    
+    //new decreased
+    printf("Input a new value for decreased or skip by pressing enter...\n");
+    char buffer[128];
+    gets(buffer);
+    if(buffer!="")
+        decreased=atoi(buffer);
+    }
+    
+}
+        
+        
+        //SDL_UpdateWindowSurface(win);
         sum+=delta;
         if(it>=10)
         {

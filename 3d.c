@@ -5,6 +5,7 @@
 #include "3d.h"
 #include "oklab.h"
 #include <string.h> //for memcpy and memset
+#include <stdio.h>
 
 void update_scr_pos();
 void update_cam_pos();
