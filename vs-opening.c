@@ -80,6 +80,8 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     int start_x,end_x;
     int x=stack[stack_size-1].x;
     int y=stack[stack_size-1].y;
+    if(y < min->y)       min->y=y;
+    if(y > max->y)       max->y=y;
     stack_size--;
     while(1) //leftmost x
     {
@@ -102,6 +104,8 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         if(x < 0 || x >= width)
         {
             x++;
+            if(x < min->x) min->x=x;
+            if(x > max->x) max->x=x;
             if(++filled_pixels_ >= filled_pixels_max) return;
             break;
         }
@@ -109,6 +113,8 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         if(*pxl == 0)
         {
             x++;
+            if(x < min->x) min->x=x;
+            if(x > max->x) max->x=x;
             if(++filled_pixels_ >= filled_pixels_max) return;
             break;
         }
@@ -165,6 +171,8 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
             bottom+=2;
         }
         x++;
+        if(x < min->x) min->x=x;
+        if(x > max->x) max->x=x;
         if(++filled_pixels_ >= filled_pixels_max) return;
     }
     end_x=x-1;
@@ -180,8 +188,6 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     }
     if(start_x < min->x) min->x=start_x;
     if(end_x > max->x)   max->x=end_x;
-    if(y < min->y)       min->y=y;
-    if(y > max->y)       max->y=y;
     //now repeat for everyting in the stack
     } while(stack_size!=0);
     
@@ -418,7 +424,8 @@ int main(int argc, char* argv[])
                     }
                 }
                 else
-                    memcpy_area(fill_pixels, pixels, width, &min, &max);
+                    //memcpy_area(fill_pixels, pixels, width, &min, &max);
+                    memcpy(fill_pixels, pixels, sizeof(int) * width * height);
                 end=SDL_GetTicksNS();
                 time=SDL_NS_TO_MS((float)end-start)/1000;
                 printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
