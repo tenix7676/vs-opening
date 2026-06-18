@@ -9,11 +9,17 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
+//apropos the image ho_lu_shit.bmp:
 //you can see the exact cutoff point where some sort of effect was used on the bottom points making them wider (fuzzy) because the points split in 3d space in that area
+
+//TODO: why is N going up to 150 already enough to delete the text (even before -132)????
 
 //TODO: also why is the visual studio text
 // rendered as a lot of points?
 // shouldnt it be one very close point?
+//
+// Maybe its due to optimazations? but it was there before...
+
 
 //TODO: disassemble ff() into initialization and computation
 // and put inside the 'game' loop
@@ -254,6 +260,18 @@ void saving_points_test(SDL_Surface* surf)
     load_points();
 }
 
+int find_max(int* pixels, int width, int height)
+{
+    int max=pixels[0];
+    for(int y=0; y<height; ++y)
+        for(int x=0; x<width; ++x)
+        {
+            if(pixels[x+width*y] > max)
+                max=pixels[x+width*y];
+        }
+    return max;
+}
+
 int* ff(SDL_Window* win)
 {
     SDL_Surface* surf = SDL_GetWindowSurface(win);
@@ -291,6 +309,7 @@ int* ff(SDL_Window* win)
     float time;
     while(N < iterations)
     {
+    printf("MAX == %d\n", find_max(pixels, width, height));
     added_points_this_N=0;
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
@@ -309,7 +328,7 @@ int* ff(SDL_Window* win)
                     {
                         float r=sqrt(filled_pixels / M_PI);
                         float correction_factor=0;
-                        float weight_deleted=0;
+                        float weight_deleted=0.75;
                         for(int i=1; i<=N; ++i)
                         {
                             weight_deleted+=2*M_PI*(r+i)*(N+1-i);
@@ -354,6 +373,8 @@ int* ff(SDL_Window* win)
     time=SDL_NS_TO_MS((float)end-start)/1000;
     printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%\n",N, added_points_this_N, added_points, time, 100.f);
     N++;
+    printf("MAX == %d\n", find_max(pixels, width, height));
+
     }
     
     return pixels;
