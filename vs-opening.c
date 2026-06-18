@@ -265,9 +265,7 @@ int* ff(SDL_Window* win)
     int* pixels = malloc(sizeof(int)*width*height);
     int* fill_pixels = malloc(sizeof(int)*width*height);
     int* skip_these_pixels = malloc(sizeof(int)*width*height);
-    int* restored_skip_these_pixels = malloc(sizeof(int)*width*height);
     for(int i=0; i < width*height; ++i) skip_these_pixels[i]=0;
-    memcpy(restored_skip_these_pixels, skip_these_pixels, sizeof(int)*width*height);
     
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
@@ -282,7 +280,7 @@ int* ff(SDL_Window* win)
     SDL_UpdateWindowSurface(win);
     
     //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
-    int iterations = (3 * 255-1);
+    int iterations = 150;(3 * 255-1);
     int N=0;
     int added_points=0;
     int added_points_this_N=0;
@@ -307,7 +305,7 @@ int* ff(SDL_Window* win)
                     if(filled_pixels < MAX_FILLED_PIXELS)
                     {
                         float r=sqrt(filled_pixels / M_PI);
-                        float correction_factor=.5;
+                        float correction_factor=0;
                         float weight_deleted=0;
                         for(int i=1; i<=N; ++i)
                         {
@@ -318,7 +316,7 @@ int* ff(SDL_Window* win)
                         
                         added_points++;
                         added_points_this_N++;
-                        backwards_render((6.9*4.20*69)/weight, avg_x, avg_y);
+                        backwards_render((2200)/weight, avg_x, avg_y);
                         memcpy_area(pixels, fill_pixels, width, &min, &max);
                     }
                     else
