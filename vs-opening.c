@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
+//you can see the exact cutoff point where some sort of effect was used on the bottom points making them wider (fuzzy) because the points split in 3d space in that area
+
 //TODO: also why is the visual studio text
 // rendered as a lot of points?
 // shouldnt it be one very close point?
@@ -272,7 +274,11 @@ int* ff(SDL_Window* win)
         {
             Uint8* pxl = pxl_at(x,y,pitch,pixels_);
             if(pxl[0]==16&&pxl[1]==16&&pxl[2]==16) pixels[x+width*y]=0;
-            else pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2];
+            else 
+            {
+                pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2]-132;
+                if(pixels[x+width*y]<0) pixels[x+width*y]=0; 
+            }
         }
     memcpy(fill_pixels, pixels, sizeof(int)*width*height);
 
