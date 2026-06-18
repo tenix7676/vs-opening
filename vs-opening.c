@@ -58,9 +58,8 @@ Uint8* pxl_at(int x, int y, int pitch, Uint8* pixels)
 
 #define MAX_STACK_SIZE 4*1024
 SDL_Point stack[MAX_STACK_SIZE];
-void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, float* avg_y, float* weight, int* filled_pixels, SDL_Point* min, SDL_Point* max, int filled_pixels_max)
+void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, float* avg_y, float* weight, int* filled_pixels, SDL_Point* min, SDL_Point* max, int filled_pixels_max, int* skip_these_pixels)
 {
-    int filled_pixels_=0;
     *filled_pixels=0;
     min->x=x0;
     min->y=y0;
@@ -80,6 +79,8 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     int start_x,end_x;
     int x=stack[stack_size-1].x;
     int y=stack[stack_size-1].y;
+    if(y < min->y)       min->y=y;
+    if(y > max->y)       max->y=y;
     stack_size--;
     while(1) //leftmost x
     {
@@ -101,15 +102,21 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         Uint8* pxl_topleft;
         if(x < 0 || x >= width)
         {
+            skip_these_pixels[x+width*y]=1;
+            if(x < min->x)   min->x=x;
+            if(x > max->x)   max->x=x;
+            if(++(*filled_pixels) >= filled_pixels_max) return;
             x++;
-            //if(++filled_pixels_ >= filled_pixels_max) return;
             break;
         }
         pxl = &pixels[x + (y)*width];
         if(*pxl == 0)
         {
+            skip_these_pixels[x+width*y]=1;
+            if(x < min->x)   min->x=x;
+            if(x > max->x)   max->x=x;
+            if(++(*filled_pixels) >= filled_pixels_max) return;
             x++;
-            //if(++filled_pixels_ >= filled_pixels_max) return;
             break;
         }
         int bottom = 0;
@@ -164,8 +171,11 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
             }
             bottom+=2;
         }
+        skip_these_pixels[x+width*y]=1;
+        if(x < min->x)   min->x=x;
+        if(x > max->x)   max->x=x;
+        if(++(*filled_pixels) >= filled_pixels_max) return;
         x++;
-        //if(++filled_pixels_ >= filled_pixels_max) return;
     }
     end_x=x-1;
     *filled_pixels+=end_x-start_x+1;
@@ -180,8 +190,6 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     }
     if(start_x < min->x) min->x=start_x;
     if(end_x > max->x)   max->x=end_x;
-    if(y < min->y)       min->y=y;
-    if(y > max->y)       max->y=y;
     //now repeat for everyting in the stack
     } while(stack_size!=0);
     
@@ -371,6 +379,9 @@ int main(int argc, char* argv[])
     int pitch     = surf->pitch;
     int* pixels = malloc(sizeof(int)*width*height);
     int* fill_pixels = malloc(sizeof(int)*width*height);
+    int* skip_these_pixels = malloc(sizeof(int)*width*height);//it propably should be 'those' but whatever
+    //also wouldve been better as a global variable but wahtver
+    for(int i=0; i < width*height; ++i) skip_these_pixels[i]=0;
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
         {
@@ -395,13 +406,13 @@ int main(int argc, char* argv[])
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
         {
-            if(pixels[x+width*y]!=0)
+            if(pixels[x+width*y]!=0 && skip_these_pixels[x+width*y]==0)
             {
                 int filled_pixels;
                 SDL_Point min, max;
                 float avg_x, avg_y;
                 float weight;
-                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, decreased);
+                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, decreased, skip_these_pixels);
                 if(filled_pixels != 0)
                 {
                     if(filled_pixels < decreased) //&& weight > 3*16)
@@ -415,10 +426,10 @@ int main(int argc, char* argv[])
                         //backwards_render((6.9*4.20*69)/weight, avg_x, avg_y);
                         memcpy_area(pixels, fill_pixels, width, &min, &max);
                     }
+                    else
+                        memcpy_area(fill_pixels, pixels, width, &min, &max);
+                        //memcpy(fill_pixels, pixels, sizeof(int) * width * height);
                 }
-                else
-                    memcpy_area(fill_pixels, pixels, width, &min, &max);
-                    //memcpy(fill_pixels, pixels, sizeof(int) * width * height);
                 end=SDL_GetTicksNS();
                 time=SDL_NS_TO_MS((float)end-start)/1000;
                 printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
