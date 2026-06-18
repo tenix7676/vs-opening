@@ -324,7 +324,7 @@ int* ff(SDL_Window* win)
                 fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, MAX_FILLED_PIXELS, skip_these_pixels);
                 if(filled_pixels != 0)
                 {
-                    if(filled_pixels < MAX_FILLED_PIXELS)// && filled_pixels > 4)
+                    if(filled_pixels < MAX_FILLED_PIXELS && filled_pixels > 4)
                     {
                         // if(N==122)
                             // printf("filled_pixels==%d\n",filled_pixels);
