@@ -102,14 +102,14 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         if(x < 0 || x >= width)
         {
             x++;
-            if(++filled_pixels_ >= filled_pixels_max) return;
+            //if(++filled_pixels_ >= filled_pixels_max) return;
             break;
         }
         pxl = &pixels[x + (y)*width];
         if(*pxl == 0)
         {
             x++;
-            if(++filled_pixels_ >= filled_pixels_max) return;
+            //if(++filled_pixels_ >= filled_pixels_max) return;
             break;
         }
         int bottom = 0;
@@ -165,7 +165,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
             bottom+=2;
         }
         x++;
-        if(++filled_pixels_ >= filled_pixels_max) return;
+        //if(++filled_pixels_ >= filled_pixels_max) return;
     }
     end_x=x-1;
     *filled_pixels+=end_x-start_x+1;
@@ -383,7 +383,6 @@ int main(int argc, char* argv[])
 
     update_surf(fill_pixels, surf);
     SDL_UpdateWindowSurface(win);
-    SDL_Delay(1500);
     //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
     int iterations = (3 * 255-1);
     int N=0;
@@ -418,8 +417,8 @@ int main(int argc, char* argv[])
                     }
                 }
                 else
-                    //memcpy_area(fill_pixels, pixels, width, &min, &max);
-                    memcpy(fill_pixels, pixels, sizeof(int) * width * height);
+                    memcpy_area(fill_pixels, pixels, width, &min, &max);
+                    //memcpy(fill_pixels, pixels, sizeof(int) * width * height);
                 end=SDL_GetTicksNS();
                 time=SDL_NS_TO_MS((float)end-start)/1000;
                 printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
