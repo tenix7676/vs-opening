@@ -7,7 +7,7 @@
 #include "SDL3/SDL_main.h"
 #include "oklab.h"
 #include <assert.h>
-#include <string.h> //for memcpy
+#include <string.h> //for memcpy, strcmp
 
 // TODO: maybe this creates wrong results:
 //   after 2nd pass some pixels that have should be flooded are not?
@@ -359,7 +359,7 @@ int main(int argc, char* argv[])
         reset_buttons();
         
         bool* keyboard = SDL_GetKeyboardState(NULL);
-        static int decreased=69;
+        static int decreased=230;
         static float exponent=1;
         static int fps_toggled=0;
         if(keyboard[SDL_SCANCODE_MINUS]) { printf("Decreasing... now at %d\n", ++decreased); }//decrease_by_one(pixels, screen_surf);}
@@ -401,6 +401,7 @@ int main(int argc, char* argv[])
     int added_points_this_N=0;
     Uint64 end, start=SDL_GetTicksNS();
     float time;
+    while(N < iterations)
     {
     added_points_this_N=0;
     for(int y=0; y<height; ++y)
@@ -450,10 +451,17 @@ int main(int argc, char* argv[])
     printf("Input a new value for decreased or skip by pressing enter...\n");
     char buffer[128];
     gets(buffer);
-    if(buffer!="")
-        decreased=atoi(buffer);
+    if(!strcmp(buffer,"q"))
+    {
+        SDL_Quit();
     }
-    
+    else
+    {
+        int prev = decreased;
+        decreased=atoi(buffer);
+        if (decreased == 0) decreased = prev; //doesnt work around 0, 1 but i dont need it to work there
+    }
+    }
 }
         
         
