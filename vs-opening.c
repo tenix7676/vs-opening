@@ -283,7 +283,6 @@ int main(int argc, char* argv[])
     init_3d(width, height);
     
     SDL_UpdateWindowSurface(win);
-    SDL_Delay(100);
     //int* pixels = ff(screen_surf);
     //load_points();
     
@@ -291,6 +290,27 @@ int main(int argc, char* argv[])
     
     SDL_DisableScreenSaver();
     
+    
+    SDL_BlitSurface(bmp, NULL, screen_surf, NULL);
+    SDL_Surface* surf=screen_surf;
+    Uint8* pixels_= surf->pixels;
+    width         = surf->w;
+    height        = surf->h;
+    int pitch     = surf->pitch;
+    int* pixels = malloc(sizeof(int)*width*height);
+    int* fill_pixels = malloc(sizeof(int)*width*height);
+    int* skip_these_pixels = malloc(sizeof(int)*width*height);//it propably should be 'those' but whatever
+    //also wouldve been better as a global variable but wahtver
+    for(int i=0; i < width*height; ++i) skip_these_pixels[i]=0;
+    for(int y=0; y<height; ++y)
+        for(int x=0; x<width; ++x)
+        {
+            Uint8* pxl = pxl_at(x,y,pitch,pixels_);
+            if(pxl[0]==16&&pxl[1]==16&&pxl[2]==16) pixels[x+width*y]=0;
+            else pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2];
+        }
+    
+    memcpy(fill_pixels, pixels, sizeof(int)*width*height);
     float flyinGspeed=0.0006;
     int it=1;
     Uint64 start,end,sum=0,delta=0;
@@ -359,11 +379,11 @@ int main(int argc, char* argv[])
         reset_buttons();
         
         bool* keyboard = SDL_GetKeyboardState(NULL);
-        static int decreased=230;
+        static int decreased=0;
         static float exponent=1;
         static int fps_toggled=0;
-        if(keyboard[SDL_SCANCODE_MINUS]) { printf("Decreasing... now at %d\n", ++decreased); }//decrease_by_one(pixels, screen_surf);}
-        if(keyboard[SDL_SCANCODE_EQUALS]) { printf("Increasing... now at %d\n", --decreased); }//increase_by_one(pixels, screen_surf);}
+        if(keyboard[SDL_SCANCODE_MINUS]) { printf("Decreasing... now at %d\n", --decreased); }//decrease_by_one(pixels, screen_surf);}
+        if(keyboard[SDL_SCANCODE_EQUALS]) { printf("Increasing... now at %d\n", ++decreased); }//increase_by_one(pixels, screen_surf);}
         if(keyboard[SDL_SCANCODE_Q]) { exponent/=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
         if(keyboard[SDL_SCANCODE_E]) { exponent*=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
         if(keyboard[SDL_SCANCODE_F]) fps_toggled=!fps_toggled;
@@ -371,99 +391,28 @@ int main(int argc, char* argv[])
         //SDL_ClearSurface(screen_surf, 0,0,0,0);
        
 {
-    SDL_BlitSurface(bmp, NULL, screen_surf, NULL);
-    SDL_Surface* surf=screen_surf;
-    Uint8* pixels_= surf->pixels;
-    int width     = surf->w;
-    int height    = surf->h;
-    int pitch     = surf->pitch;
-    int* pixels = malloc(sizeof(int)*width*height);
-    int* fill_pixels = malloc(sizeof(int)*width*height);
-    int* skip_these_pixels = malloc(sizeof(int)*width*height);//it propably should be 'those' but whatever
-    //also wouldve been better as a global variable but wahtver
-    for(int i=0; i < width*height; ++i) skip_these_pixels[i]=0;
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            Uint8* pxl = pxl_at(x,y,pitch,pixels_);
-            if(pxl[0]==16&&pxl[1]==16&&pxl[2]==16) pixels[x+width*y]=0;
-            else pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2];
-        }
-    
-    memcpy(fill_pixels, pixels, sizeof(int)*width*height);
 
-    update_surf(fill_pixels, surf);
-    SDL_UpdateWindowSurface(win);
+
+    //update_surf(fill_pixels, surf);
+    //SDL_UpdateWindowSurface(win);
     //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
     int iterations = (3 * 255-1);
-    int N=0;
+    int N=decreased;
     int added_points=0;
     int added_points_this_N=0;
     Uint64 end, start=SDL_GetTicksNS();
     float time;
-    while(N < iterations)
-    {
-    added_points_this_N=0;
+
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
         {
-            if(pixels[x+width*y]!=0 && skip_these_pixels[x+width*y]==0)
-            {
-                int filled_pixels;
-                SDL_Point min, max;
-                float avg_x, avg_y;
-                float weight;
-                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, decreased, skip_these_pixels);
-                if(filled_pixels != 0)
-                {
-                    if(filled_pixels < decreased) //&& weight > 3*16)
-                    {
-                        for(int i=0; i <N; ++i) //TODO: maybe this creates wrong results 
-                        {
-                            ;//weight+=1;//M_PI*(sqrtf(filled_pixels / M_PI)-1+i);// * (N-i); //add on the deleted pixels very aproximately
-                        }
-                        added_points++;
-                        added_points_this_N++;
-                        //backwards_render((6.9*4.20*69)/weight, avg_x, avg_y);
-                        memcpy_area(pixels, fill_pixels, width, &min, &max);
-                    }
-                    else
-                        memcpy_area(fill_pixels, pixels, width, &min, &max);
-                        //memcpy(fill_pixels, pixels, sizeof(int) * width * height);
-                }
-                end=SDL_GetTicksNS();
-                time=SDL_NS_TO_MS((float)end-start)/1000;
-                printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
-            }
+            fill_pixels[x+width*y] = pixels[x+width*y] - N;
+            if(fill_pixels[x+width*y] < 0) fill_pixels[x+width*y] = 0; //coulda used max but whateves
         }
-
     update_surf(fill_pixels, surf);
     SDL_UpdateWindowSurface(win);
-
-    end=SDL_GetTicksNS();
-    time=SDL_NS_TO_MS((float)end-start)/1000;
-    printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%\n",N, added_points_this_N, added_points, time, 100.f);
-
-    free(pixels);
-    free(fill_pixels);//its dumb i know... im just hacking this quickly
-    
-    //new decreased
-    printf("Input a new value for decreased or skip by pressing enter...\n");
-    char buffer[128];
-    gets(buffer);
-    if(!strcmp(buffer,"q"))
-    {
-        SDL_Quit();
-    }
-    else
-    {
-        int prev = decreased;
-        decreased=atoi(buffer);
-        if (decreased == 0) decreased = prev; //doesnt work around 0, 1 but i dont need it to work there
-    }
-    }
+    printf("N=%d\n",N);
 }
-        
         
         //SDL_UpdateWindowSurface(win);
         sum+=delta;
