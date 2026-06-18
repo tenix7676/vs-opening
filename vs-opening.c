@@ -195,7 +195,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         x++;
     }
     end_x=x-1;
-    *filled_pixels+=end_x-start_x+1;
+    *filled_pixels=end_x-start_x+1;
     //DrawLine
     for(int x=start_x; x<=end_x; ++x)
     {
@@ -301,7 +301,7 @@ int* ff(SDL_Window* win)
     SDL_UpdateWindowSurface(win);
     
     //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
-    int iterations = 150;(3 * 255-1);
+    int iterations = (3 * 255-1);
     int N=0;
     int added_points=0;
     int added_points_this_N=0;
@@ -309,7 +309,7 @@ int* ff(SDL_Window* win)
     float time;
     while(N < iterations)
     {
-    printf("MAX == %d\n", find_max(pixels, width, height));
+    printf("bottom S == %d\n", pixels[706+width*448]);
     added_points_this_N=0;
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
@@ -324,8 +324,10 @@ int* ff(SDL_Window* win)
                 fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, MAX_FILLED_PIXELS, skip_these_pixels);
                 if(filled_pixels != 0)
                 {
-                    if(filled_pixels < MAX_FILLED_PIXELS)
+                    if(filled_pixels < MAX_FILLED_PIXELS)// && filled_pixels > 4)
                     {
+                        // if(N==122)
+                            // printf("filled_pixels==%d\n",filled_pixels);
                         float r=sqrt(filled_pixels / M_PI);
                         float correction_factor=0;
                         float weight_deleted=0.75;
@@ -373,8 +375,7 @@ int* ff(SDL_Window* win)
     time=SDL_NS_TO_MS((float)end-start)/1000;
     printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%\n",N, added_points_this_N, added_points, time, 100.f);
     N++;
-    printf("MAX == %d\n", find_max(pixels, width, height));
-
+    printf("bottom S == %d\n", pixels[706+width*448]);
     }
     
     return pixels;
