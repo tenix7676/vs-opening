@@ -9,6 +9,16 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
+//TODO: also why is the visual studio text
+// rendered as a lot of points?
+// shouldnt it be one very close point?
+
+//TODO: Test this out on with all pixels subtcracted 132 form the start
+//  but then maybe also a smaller MAX_FILLED_PIXELS than 230
+
+//TODO: disassemble ff() into initialization and computation
+// and put inside the 'game' loop
+
 // TODO: maybe this creates wrong results:
 //   after 2nd pass some pixels that have should be flooded are not?
 //   like single pixels?? weird
@@ -21,9 +31,11 @@
 //Okay now it looks like the first idea i had
 //  but shittier bruh
 
+
 //TODO: also why is the visual studio text
 // rendered as a lot of points?
 // shouldnt it be one very close point?
+
 
 //TODO: make the flood thicker by 1 pixl
 // so it captures some pixels even if they are not perfectly
@@ -282,14 +294,14 @@ int* ff(SDL_Window* win)
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
         {
-            if(pixels[x+width*y]!=0)
+            if(pixels[x+width*y]!=0 && skip_these_pixels[x+width*y]==0)
             {
                 int filled_pixels;
                 SDL_Point min, max;
                 float avg_x, avg_y;
                 float weight;
                 const int MAX_FILLED_PIXELS=230;
-                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, MAX_FILLED_PIXELS, restored_skip_these_pixels);
+                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, MAX_FILLED_PIXELS, skip_these_pixels);
                 if(filled_pixels != 0)
                 {
                     if(filled_pixels < MAX_FILLED_PIXELS)
@@ -307,12 +319,10 @@ int* ff(SDL_Window* win)
                         added_points++;
                         added_points_this_N++;
                         backwards_render((6.9*4.20*69)/weight, avg_x, avg_y);
-                        memcpy_area(skip_these_pixels, restored_skip_these_pixels, width, &min, &max);
                         memcpy_area(pixels, fill_pixels, width, &min, &max);
                     }
                     else
                     {
-                        memcpy_area(restored_skip_these_pixels, skip_these_pixels, width, &min, &max);
                         memcpy_area(fill_pixels, pixels, width, &min, &max);
                     }
                 }
@@ -321,6 +331,8 @@ int* ff(SDL_Window* win)
                 printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
             }
         }
+    
+    for(int i=0; i < width*height; ++i) skip_these_pixels[i]=0; //reset skip_these_pixels for each N
     
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
