@@ -15,9 +15,6 @@
 // rendered as a lot of points?
 // shouldnt it be one very close point?
 
-//TODO: Test this out on with all pixels subtcracted 132 form the start
-//  but then maybe also a smaller MAX_FILLED_PIXELS than 230
-
 //TODO: disassemble ff() into initialization and computation
 // and put inside the 'game' loop
 
