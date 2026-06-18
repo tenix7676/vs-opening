@@ -301,7 +301,7 @@ int* ff(SDL_Window* win)
     SDL_UpdateWindowSurface(win);
     
     //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
-    int iterations = (3 * 255-1);
+    int iterations = (3 * 255-1)-132;
     int N=0;
     int added_points=0;
     int added_points_this_N=0;
@@ -320,11 +320,11 @@ int* ff(SDL_Window* win)
                 SDL_Point min, max;
                 float avg_x, avg_y;
                 float weight;
-                const int MAX_FILLED_PIXELS=230;
+                const int MAX_FILLED_PIXELS=20;
                 fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, MAX_FILLED_PIXELS, skip_these_pixels);
                 if(filled_pixels != 0)
                 {
-                    if(filled_pixels < MAX_FILLED_PIXELS && filled_pixels > 4)
+                    if(filled_pixels < MAX_FILLED_PIXELS && filled_pixels > 1)
                     {
                         // if(N==122)
                             // printf("filled_pixels==%d\n",filled_pixels);
