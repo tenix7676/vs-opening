@@ -58,7 +58,7 @@ Uint8* pxl_at(int x, int y, int pitch, Uint8* pixels)
 
 #define MAX_STACK_SIZE 4*1024
 SDL_Point stack[MAX_STACK_SIZE];
-void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, float* avg_y, float* weight, int* filled_pixels, SDL_Point* min, SDL_Point* max)
+void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, float* avg_y, float* weight, int* filled_pixels, SDL_Point* min, SDL_Point* max, int filled_pixels_max, int* skip_these_pixels)
 {
     *filled_pixels=0;
     min->x=x0;
@@ -79,6 +79,8 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     int start_x,end_x;
     int x=stack[stack_size-1].x;
     int y=stack[stack_size-1].y;
+    if(y < min->y)       min->y=y;
+    if(y > max->y)       max->y=y;
     stack_size--;
     while(1) //leftmost x
     {
@@ -100,12 +102,20 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         Uint8* pxl_topleft;
         if(x < 0 || x >= width)
         {
+            skip_these_pixels[x+width*y]=1;
+            if(x < min->x)   min->x=x;
+            if(x > max->x)   max->x=x;
+            if(++(*filled_pixels) >= filled_pixels_max) return;
             x++;
             break;
         }
         pxl = &pixels[x + (y)*width];
         if(*pxl == 0)
         {
+            skip_these_pixels[x+width*y]=1;
+            if(x < min->x)   min->x=x;
+            if(x > max->x)   max->x=x;
+            if(++(*filled_pixels) >= filled_pixels_max) return;
             x++;
             break;
         }
@@ -161,6 +171,10 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
             }
             bottom+=2;
         }
+        skip_these_pixels[x+width*y]=1;
+        if(x < min->x)   min->x=x;
+        if(x > max->x)   max->x=x;
+        if(++(*filled_pixels) >= filled_pixels_max) return;
         x++;
     }
     end_x=x-1;
@@ -176,8 +190,6 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     }
     if(start_x < min->x) min->x=start_x;
     if(end_x > max->x)   max->x=end_x;
-    if(y < min->y)       min->y=y;
-    if(y > max->y)       max->y=y;
     //now repeat for everyting in the stack
     } while(stack_size!=0);
     
@@ -202,32 +214,8 @@ void update_surf(int* pixels, SDL_Surface* surf)
             if(pixels[x+width*y] > 0)
                 pxl[2]=fmin(69+255*sqrtf(fabs(pixels[x+width*y]) / (3. * 255)),255);
             else if(pixels[x+width*y] < 0)
-                pxl[0]=0*fmin(69+255*sqrtf(fabs(pixels[x+width*y]) / (3. * 255)),255);
+                pxl[0]=fmin(69+255*sqrtf(fabs(pixels[x+width*y]) / (3. * 255)),255);
         } 
-}
-
-void decrease_by_one(int* pixels, SDL_Surface* surf)
-{
-    int width     = surf->w;
-    int height    = surf->h;
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            pixels[x+width*y]-=1;
-        }
-    update_surf(pixels, surf);
-}
-
-void increase_by_one(int* pixels, SDL_Surface* surf)
-{
-    int width     = surf->w;
-    int height    = surf->h;
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            pixels[x+width*y]+=1;
-        }
-    update_surf(pixels, surf);
 }
 
 void memcpy_area(int* to, int* from, int width, SDL_Point* min, SDL_Point* max)
@@ -255,38 +243,32 @@ void saving_points_test(SDL_Surface* surf)
     load_points();
 }
 
-int* ff(SDL_Surface* surf)
+int* ff(SDL_Window* win)
 {
+    SDL_Surface* surf = SDL_GetWindowSurface(win);
     Uint8* pixels_= surf->pixels;
     int width     = surf->w;
     int height    = surf->h;
     int pitch     = surf->pitch;
     int* pixels = malloc(sizeof(int)*width*height);
     int* fill_pixels = malloc(sizeof(int)*width*height);
-    int min=0;
+    int* skip_these_pixels = malloc(sizeof(int)*width*height);
+    int* restored_skip_these_pixels = malloc(sizeof(int)*width*height);
+    for(int i=0; i < width*height; ++i) skip_these_pixels[i]=0;
+    memcpy(restored_skip_these_pixels, skip_these_pixels, sizeof(int)*width*height);
+    
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
         {
             Uint8* pxl = pxl_at(x,y,pitch,pixels_);
-            pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2]-3*16;
+            if(pxl[0]==16&&pxl[1]==16&&pxl[2]==16) pixels[x+width*y]=0;
+            else pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2];
         }
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            if(pixels[x+width*y] !=0 )
-                if(pixels[x+width*y]<min)
-                    min = pixels[x+width*y];
-        }
-    printf("min=%d\n",min);
-    for(int y=0; y<height; ++y)
-        for(int x=0; x<width; ++x)
-        {
-            if(pixels[x+width*y] !=0 )
-                pixels[x+width*y] += -min;
-        }
-
     memcpy(fill_pixels, pixels, sizeof(int)*width*height);
 
+    update_surf(fill_pixels, surf);
+    SDL_UpdateWindowSurface(win);
+    
     //N=763 added    0 points, overall we added 12876, time taken so far: 4638.6s, 100.00%
     int iterations = (3 * 255-1);
     int N=0;
@@ -306,29 +288,40 @@ int* ff(SDL_Surface* surf)
                 SDL_Point min, max;
                 float avg_x, avg_y;
                 float weight;
-                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max);
+                const int MAX_FILLED_PIXELS=230;
+                fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, MAX_FILLED_PIXELS, restored_skip_these_pixels);
                 if(filled_pixels != 0)
                 {
-                    if(filled_pixels < 69 && weight > 3*16)
+                    if(filled_pixels < MAX_FILLED_PIXELS)
                     {
-                        for(int i=0; i <N; ++i) //TODO: maybe this creates wrong results 
+                        float r=sqrt(filled_pixels / M_PI);
+                        float correction_factor=.5;
+                        float weight_deleted=0;
+                        for(int i=1; i<=N; ++i)
                         {
-                            ;//weight+=1;//M_PI*(sqrtf(filled_pixels / M_PI)-1+i);// * (N-i); //add on the deleted pixels very aproximately
+                            weight_deleted+=2*M_PI*(r+i)*(N+1-i);
                         }
+                        weight_deleted*=correction_factor;
+                        weight+=filled_pixels*N+weight_deleted;
+                        
                         added_points++;
                         added_points_this_N++;
                         backwards_render((6.9*4.20*69)/weight, avg_x, avg_y);
+                        memcpy_area(skip_these_pixels, restored_skip_these_pixels, width, &min, &max);
                         memcpy_area(pixels, fill_pixels, width, &min, &max);
                     }
                     else
+                    {
+                        memcpy_area(restored_skip_these_pixels, skip_these_pixels, width, &min, &max);
                         memcpy_area(fill_pixels, pixels, width, &min, &max);
+                    }
                 }
                 end=SDL_GetTicksNS();
                 time=SDL_NS_TO_MS((float)end-start)/1000;
                 printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
             }
         }
-
+    
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
         {
@@ -339,8 +332,9 @@ int* ff(SDL_Surface* surf)
         }
     char out_path[64];
     sprintf(out_path, "passes/holyshit_after_%d_pass.bmp", N);
-    update_surf(pixels, surf);
     SDL_SaveBMP(surf, out_path);
+    update_surf(pixels, surf);
+    SDL_UpdateWindowSurface(win);
     save_points();
     
     end=SDL_GetTicksNS();
@@ -368,10 +362,8 @@ int main(int argc, char* argv[])
     //SDL_SaveBMP(screen_surf, "angel_modifried.bmp");
     init_3d(width, height);
     
-    SDL_UpdateWindowSurface(win);
-    
-    //int* pixels = ff(screen_surf);
-    load_points();
+    int* pixels = ff(win);
+    //load_points();
     
     SDL_SetWindowRelativeMouseMode(win,1);
     
