@@ -9,6 +9,9 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
+//i guess this started working weight_deleted because 1. it was set 0 lol, but also
+// since we do everything in one pass, we only have N==0, so... yeeeah.
+
 //apropos the image ho_lu_shit.bmp:
 //you can see the exact cutoff point where some sort of effect was used on the bottom points making them wider (fuzzy) because the points split in 3d space in that area
 
@@ -326,8 +329,8 @@ int* ff(SDL_Window* win)
                     if(filled_pixels < MAX_FILLED_PIXELS)// && filled_pixels >= 6)
                     {
                         float r=sqrt(filled_pixels / M_PI);
-                        float correction_factor=0;
-                        float weight_deleted=0.75;
+                        float correction_factor=0.75;
+                        float weight_deleted=0;
                         for(int i=1; i<=N; ++i)
                         {
                             weight_deleted+=2*M_PI*(r+i)*(N+1-i);
