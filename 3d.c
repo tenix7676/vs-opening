@@ -193,7 +193,7 @@ void draw_screen(SDL_Surface* surface)
     }
 }
 
-void draw_screen_one_color(SDL_Surface* surface)
+void draw_screen_one_color(SDL_Surface* surface, SDL_Color color)
 {
     //Just in case
     normalise(&cam_dir);
@@ -214,8 +214,9 @@ void draw_screen_one_color(SDL_Surface* surface)
             num_rects_this_frame++;
         }
     }
-    SDL_Color color = (SDL_Color){ 255, 157, 213 };//this goes b g r
-    SDL_FillSurfaceRects(surface, rects, num_rects_this_frame, *(Uint32*)(void*)&color);
+    //SDL_Color color_ = (SDL_Color){ 255, 157, 213 };//this goes b g r
+    SDL_Color color_=(SDL_Color){ color.b, color.g, color.r };
+    SDL_FillSurfaceRects(surface, rects, num_rects_this_frame, *(Uint32*)(void*)&color_);
 }
 void turn_camera(float left_right,float up_down)
 {
