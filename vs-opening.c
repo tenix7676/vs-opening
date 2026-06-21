@@ -9,6 +9,9 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
+//TODO: not counting black pixels get the average color and color the points with that
+// try that on the other microsoft picture blend.png
+
 //i guess this started working weight_deleted because 1. it was set 0 lol, but also
 // since we do everything in one pass, we only have N==0, so... yeeeah.
 
