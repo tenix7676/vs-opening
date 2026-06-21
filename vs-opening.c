@@ -291,9 +291,6 @@ int* ff(SDL_Window* win)
             }
         }
     memcpy(fill_pixels, pixels, sizeof(int)*width*height);
-
-    update_surf(fill_pixels, surf);
-    SDL_UpdateWindowSurface(win);
     
     int iterations = 1;(3 * 255-1)-132;
     int N=0;
@@ -359,8 +356,6 @@ int* ff(SDL_Window* win)
     char out_path[64];
     sprintf(out_path, "passes/holyshit_after_%d_pass.bmp", N);
     SDL_SaveBMP(surf, out_path);
-    update_surf(pixels, surf);
-    SDL_UpdateWindowSurface(win);
     save_points();
     
     end=SDL_GetTicksNS();
@@ -410,7 +405,7 @@ int main(int argc, char* argv[])
     win = SDL_CreateWindow("vs-opening",1360,840, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN));
     //SDL_SetWindowRelativeMouseMode(win,1);
     int width, height;
-    SDL_Surface* bmp = SDL_LoadBMP("ho_lu_shit.bmp");
+    SDL_Surface* bmp = SDL_LoadBMP("blend.bmp");
     width = bmp->w;
     height = bmp->h;
     SDL_SetWindowSize(win, width, height);
