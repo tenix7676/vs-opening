@@ -397,12 +397,10 @@ SDL_Color get_avg_color(Uint8* pixels, int width, int height)
     sum.a /= count;
     sum.b /= count;
     RGB avg=oklab_to_linear_srgb(sum);
-    printf("\n%f, %f, %f\n", avg.r, avg.g, avg.b);
     SDL_Color color;
     color.r=fmin(avg.r*255,255);
     color.g=fmin(avg.g*255,255);
     color.b=fmin(avg.b*255,255);
-    printf("\n%d, %d, %d\n", color.r, color.g, color.b);
     return color;
 }
 
