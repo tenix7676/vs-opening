@@ -1,0 +1,1 @@
+tcc vs-opening.c 3d.c oklab.c -I. -L. -lsdl3 -lucrtbase -lvcruntime140 -Wl,-subsystem=console && vs-opening.exe
