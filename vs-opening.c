@@ -374,44 +374,34 @@ int* ff(SDL_Window* win)
 
 SDL_Color get_avg_color(Uint8* pixels, int width, int height)
 {
-    // Lab sum = (Lab){0,0,0};
-    int r=0,g=0,b=0;
+    Lab sum = (Lab){0,0,0};
     int count=0;
     for(size_t i=0; i < width*height; i+=4)
     {
         Uint8* pxl=&pixels[i];
-        int sum=pxl[0]+pxl[1]+pxl[2];
-        if(sum>=300 && sum <=3*255-50)
+        int pxl_sum=pxl[0]+pxl[1]+pxl[2];
+        if(pxl_sum>=300 && pxl_sum <=3*255-50)
         {
-            printf("\rsum=%d, %d, %d, %d             ", sum, pxl[2], pxl[1], pxl[0]);
-            // RGB rgb;
-            // rgb.r=fmax((float)pxl[2]-16,0)/255;
-            // rgb.g=fmax((float)pxl[1]-16,0)/255;
-            // rgb.b=fmax((float)pxl[0]-16,0)/255;
-            // // rgb.r=0;
-            // // rgb.g=0;
-            // // rgb.b=0;
-            // Lab lab = linear_srgb_to_oklab(rgb);
-            // sum.L += lab.L;
-            // sum.a += lab.a;
-            // sum.b += lab.b;
-            r+=pxl[2];
-            g+=pxl[1];
-            b+=pxl[0];
+            RGB rgb;
+            rgb.r=(float)pxl[2]/255;
+            rgb.g=(float)pxl[1]/255;
+            rgb.b=(float)pxl[0]/255;
+            Lab lab = linear_srgb_to_oklab(rgb);
+            sum.L += lab.L;
+            sum.a += lab.a;
+            sum.b += lab.b;
             count++;
         }
     }
-    // sum.L /= count;
-    // sum.a /= count;
-    // sum.b /= count;
-    // sum.L*=2;
-    // RGB avg=oklab_to_linear_srgb(sum);
-    // printf("\n%f, %f, %f\n", avg.r, avg.g, avg.b);
-    // SDL_Color color;
-    // color.r=fmin(avg.r*255,255);
-    // color.g=fmin(avg.g*255,255);
-    // color.b=fmin(avg.b*255,255);
-    SDL_Color color=(SDL_Color){ r / count, g / count, b / count };
+    sum.L /= count;
+    sum.a /= count;
+    sum.b /= count;
+    RGB avg=oklab_to_linear_srgb(sum);
+    printf("\n%f, %f, %f\n", avg.r, avg.g, avg.b);
+    SDL_Color color;
+    color.r=fmin(avg.r*255,255);
+    color.g=fmin(avg.g*255,255);
+    color.b=fmin(avg.b*255,255);
     printf("\n%d, %d, %d\n", color.r, color.g, color.b);
     return color;
 }
