@@ -9,6 +9,9 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
+//note: if i wanna publish this i need to make a good documantation/ explanation
+// ...gg
+
 //TODO: not counting black pixels get the average color and color the points with that
 // try that on the other microsoft picture blend.png
 
@@ -286,13 +289,13 @@ int* ff(SDL_Window* win)
             if(pxl[0]==16&&pxl[1]==16&&pxl[2]==16) pixels[x+width*y]=0;
             else 
             {
-                pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2]-132;
+                pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2]-55;
                 if(pixels[x+width*y]<0) pixels[x+width*y]=0; 
             }
         }
     memcpy(fill_pixels, pixels, sizeof(int)*width*height);
     
-    int iterations = 1;(3 * 255-1)-132;
+    int iterations = 2;(3 * 255-1)-55;
     int N=0;
     int added_points=0;
     int added_points_this_N=0;
