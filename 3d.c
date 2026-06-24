@@ -161,7 +161,7 @@ float check_point(Point3d* point, int* sex, int* sey)
 
     return len_p1;
 }
-#define DIST_SCALING .125
+#define DIST_SCALING 1
 void draw_screen(SDL_Surface* surface)
 {
     static float L=.9;

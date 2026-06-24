@@ -313,7 +313,7 @@ int* ff(SDL_Window* win)
                 SDL_Point min, max;
                 float avg_x, avg_y;
                 float weight;
-                const int MAX_FILLED_PIXELS=169;
+                const int MAX_FILLED_PIXELS=69;
                 fill(fill_pixels,width,height,x,y, &avg_x, &avg_y, &weight, &filled_pixels, &min, &max, MAX_FILLED_PIXELS, skip_these_pixels);
                 if(filled_pixels != 0)
                 {
@@ -330,9 +330,13 @@ int* ff(SDL_Window* win)
                         weight_deleted*=correction_factor;
                         weight+=filled_pixels*N+weight_deleted;
                         
-                        added_points++;
-                        added_points_this_N++;
-                        backwards_render((2200)/weight, avg_x, avg_y);
+                        float dist=2200/weight;
+                        if(dist > .1)
+                        {
+                            added_points++;
+                            added_points_this_N++;
+                            backwards_render(dist, avg_x, avg_y);
+                        }
                         memcpy_area(pixels, fill_pixels, width, &min, &max);
                     }
                     else
@@ -408,7 +412,7 @@ int main(int argc, char* argv[])
     win = SDL_CreateWindow("vs-opening",1360,840, 0&SDL_WINDOW_BORDERLESS | (0&SDL_WINDOW_FULLSCREEN));
     //SDL_SetWindowRelativeMouseMode(win,1);
     int width, height;
-    SDL_Surface* bmp = SDL_LoadBMP("blend.bmp");
+    SDL_Surface* bmp = SDL_LoadBMP("ho_lu_shit.bmp");
     width = bmp->w;
     height = bmp->h;
     SDL_SetWindowSize(win, width, height);
@@ -423,6 +427,8 @@ int main(int argc, char* argv[])
     SDL_SetWindowRelativeMouseMode(win,1);
     
     SDL_DisableScreenSaver();
+
+    bool* prev_keyboard[SDL_SCANCODE_COUNT];
     
     float flyinGspeed=0.0006;
     int it=1;
@@ -499,7 +505,7 @@ int main(int argc, char* argv[])
         if(keyboard[SDL_SCANCODE_EQUALS]) { printf("Increasing... now at %d\n", --decreased); }//increase_by_one(pixels, screen_surf);}
         if(keyboard[SDL_SCANCODE_Q]) { exponent/=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
         if(keyboard[SDL_SCANCODE_E]) { exponent*=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
-        if(keyboard[SDL_SCANCODE_F]) fps_toggled=!fps_toggled;
+        if(keyboard[SDL_SCANCODE_F] && !prev_keyboard[SDL_SCANCODE_F]) { fps_toggled=!fps_toggled; printf("FPS toggled ");  if(fps_toggled) printf("ON\n"); else printf("OFF\n"); }
         
         SDL_ClearSurface(screen_surf, 0,0,0,0);
         draw_screen_one_color(screen_surf, color);
@@ -513,6 +519,11 @@ int main(int argc, char* argv[])
             sum=0;
         }
         it++;
+        // idk why doesnt work -> memcpy(prev_keyboard,keyboard,SDL_SCANCODE_COUNT*sizeof(bool));
+        for(int i=0; i<SDL_SCANCODE_COUNT; ++i)
+        {
+            prev_keyboard[i] = keyboard[i];
+        }
         end=SDL_GetTicksNS();
         delta = end-start;
         SDL_DelayNS(10000000-delta); //100fps
