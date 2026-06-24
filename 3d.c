@@ -161,6 +161,119 @@ float check_point(Point3d* point, int* sex, int* sey)
 
     return len_p1;
 }
+
+float check_point_float(Point3d* point, float* sex, float* sey)
+{
+    Point3d p={
+    point->x - cam_pos.x,
+    point->y - cam_pos.y,
+    point->z - cam_pos.z
+    };
+
+    float len_p1 = dot(p, cam_dir);
+    #ifdef RENDER_IN_FRONT_OF_SCREEN
+    //check if behind of screen plane
+    if(len_p1 <= cam_dist)
+        return 0;
+    #endif
+    #ifdef RENDER_IN_FRONT_OF_CAMERA
+    //check if behind of camera plane
+    if(len_p1 <= 0)
+        return 0;
+    #endif
+    
+    float len_p2 = dot(p,s_x);
+    float sex_ = len_p2 / len_p1 * cam_dist / v_w * s_w/2;
+    *sex = sex_;
+    *sex += s_w/2;
+    //check if out of screen
+    if(!(*sex >= 0 && *sex < s_w))
+       return 0;
+    
+    len_p2 = dot(p,s_y);
+    float sey_ = len_p2 / len_p1 * cam_dist / v_h * s_h/2;
+    *sey = sey_;
+    *sey += s_h/2;
+    //check if out of screen
+    if(!(*sey >= 0 && *sey < s_h))
+       return 0;
+
+    return len_p1;
+}
+
+Uint8* pxl_at(int x, int y, int pitch, Uint8* pixels);
+
+void pxl_draw(int x, int y, int pitch, Uint8* pixels, SDL_Color color)
+{
+    Uint8* pxl = pxl_at(x,y,pitch,pixels);
+    pxl[0]=color.b;
+    pxl[1]=color.g;
+    pxl[2]=color.r;
+}
+
+void pxl_draw_8_symmetry(int x, int y, int pitch, Uint8* pixels, SDL_Color color, int cx, int cy)
+{
+    pxl_draw(cx+x,cy+y,pitch,pixels, color);
+    pxl_draw(cx+x,cy-y,pitch,pixels, color);
+    pxl_draw(cx-x,cy+y,pitch,pixels, color);
+    pxl_draw(cx-x,cy-y,pitch,pixels, color);
+    pxl_draw(cx+y,cy+x,pitch,pixels, color);
+    pxl_draw(cx+y,cy-x,pitch,pixels, color);
+    pxl_draw(cx-y,cy+x,pitch,pixels, color);
+    pxl_draw(cx-y,cy-x,pitch,pixels, color);
+}
+
+//https://groups.csail.mit.edu/graphics/classes/6.837/F98/Lecture6/circle.html
+void draw_circle(int cx, int cy, int r, int pitch, Uint8* pixels)
+{
+    SDL_Color color=(SDL_Color){255,0%256,255};
+    int x=0;
+    int y=r;
+    int f=(5-4*r)/4;
+            pxl_draw_8_symmetry(x,y,pitch,pixels,color,cx,cy);
+    while(y > x)
+    {
+        x++;
+        f+=2*x+1;
+        if(f>=0) { y--; f+=-2*y+1;  }
+        int y_=y;
+        // while(y_>=x)
+        // {    
+            pxl_draw_8_symmetry(x,y_,pitch,pixels,color,cx,cy);
+            // --y_;
+        // }
+    }
+}
+
+void fuzzy_circle(float cx, float cy, float r, Lab color, SDL_Surface* surf)
+{
+    Uint8* pixels = surf->pixels;
+    int width     = surf->w;
+    int height    = surf->h;
+    int pitch     = surf->pitch;
+    
+    float border=2;
+    for(int y=-border-r-1; y<r+1+border; ++y)
+        for(int x=-border-r-1; x<r+1+border; ++x)
+        {
+            Lab pxl_color = color;
+            float dist = hypotf(x, y);
+            if(dist < r) ;
+            else if(dist > r+border) continue;
+            else
+            {
+                pxl_color.L=color.L*(1-(dist-r) / border);
+            }
+            RGB rgb = oklab_to_linear_srgb(pxl_color);
+            SDL_Color sdlcolor=(SDL_Color){fmin(rgb.r*255,255), fmin(rgb.g*255,255), fmin(rgb.b*255,255)};
+            if(cx+x > 0 && cx+x < width)
+            if(cy+y > 0 && cy+y < height)
+            pxl_draw(cx+x, cy+y, pitch, pixels, sdlcolor); //instead of this we should take an average
+            //of the Lab color thats already there
+            //and of the Lab color we want to apply to it
+        }
+}
+
 #define DIST_SCALING 1
 void draw_screen(SDL_Surface* surface)
 {
@@ -188,6 +301,7 @@ void draw_screen(SDL_Surface* surface)
                 fmin(255,rgb.r*255) };
             float rect_radius=1+DIST_SCALING/len_p1;//powf(len_p1,.85);
             const SDL_Rect rect=(SDL_Rect){sex-rect_radius,sey-rect_radius,rect_radius,rect_radius};
+            
             SDL_FillSurfaceRect(surface, &rect, *(Uint32*)(void*)&color);
         }
     }
@@ -217,6 +331,24 @@ void draw_screen_one_color(SDL_Surface* surface, SDL_Color color)
     //SDL_Color color_ = (SDL_Color){ 255, 157, 213 };//this goes b g r
     SDL_Color color_=(SDL_Color){ color.b, color.g, color.r };
     SDL_FillSurfaceRects(surface, rects, num_rects_this_frame, *(Uint32*)(void*)&color_);
+}
+
+void draw_screen_fuzzy_circles(SDL_Surface* surf, Lab color)
+{
+    //Just in case
+    normalise(&cam_dir);
+    normalise(&s_x);
+    normalise(&s_y);
+    for(size_t i=0; i < point_count; ++i)
+    {
+        float sex, sey;
+        float len_p1 = check_point_float(points+i,&sex,&sey);
+        if(len_p1 > 0)
+        {
+            float radius=.5+DIST_SCALING/len_p1;//powf(len_p1,.85);
+            fuzzy_circle(sex, sey, radius, color, surf);
+        }
+    }
 }
 void turn_camera(float left_right,float up_down)
 {

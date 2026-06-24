@@ -1,6 +1,7 @@
 #ifndef _3d_h
 #define _3dh_h
 #include "SDL3/SDL.h"
+#include "oklab.h"
 
 typedef struct Point3d
 {
@@ -32,4 +33,6 @@ void save_points();
 void reset_points();
 void load_points();
 void change_dist_exponent(float exp);
+void draw_circle(int cx, int cy, int r, int pitch, Uint8* pixels);
+void fuzzy_circle(float cx, float cy, float r, Lab color, SDL_Surface* surf);
 #endif

@@ -9,6 +9,11 @@
 #include <assert.h>
 #include <string.h> //for memcpy
 
+//dwa sopsoby na znalezienie wzoru tej funkcji:
+// 1. sprobowac znalezc jej invers, czyli za pomoca transformacji
+//    wyprostowac punkty
+// 2. jakas interpolacja
+
 //note: if i wanna publish this i need to make a good documantation/ explanation
 // ...gg
 
@@ -374,7 +379,7 @@ int* ff(SDL_Window* win)
     return pixels;
 }
 
-SDL_Color get_avg_color(Uint8* pixels, int width, int height)
+Lab get_avg_color(Uint8* pixels, int width, int height)
 {
     Lab sum = (Lab){0,0,0};
     int count=0;
@@ -398,12 +403,13 @@ SDL_Color get_avg_color(Uint8* pixels, int width, int height)
     sum.L /= count;
     sum.a /= count;
     sum.b /= count;
-    RGB avg=oklab_to_linear_srgb(sum);
-    SDL_Color color;
-    color.r=fmin(avg.r*255,255);
-    color.g=fmin(avg.g*255,255);
-    color.b=fmin(avg.b*255,255);
-    return color;
+    return sum;
+    // RGB avg=oklab_to_linear_srgb(sum);
+    // SDL_Color color;
+    // color.r=fmin(avg.r*255,255);
+    // color.g=fmin(avg.g*255,255);
+    // color.b=fmin(avg.b*255,255);
+    // return color;
 }
 
 int main(int argc, char* argv[])
@@ -418,7 +424,7 @@ int main(int argc, char* argv[])
     SDL_SetWindowSize(win, width, height);
     SDL_Surface* screen_surf = SDL_GetWindowSurface(win);
     SDL_BlitSurface(bmp, NULL, screen_surf, NULL);
-    SDL_Color color=get_avg_color(screen_surf->pixels, width, height);
+    Lab color=get_avg_color(screen_surf->pixels, width, height);
     init_3d(width, height);
     
     int* pixels = ff(win);
@@ -508,7 +514,7 @@ int main(int argc, char* argv[])
         if(keyboard[SDL_SCANCODE_F] && !prev_keyboard[SDL_SCANCODE_F]) { fps_toggled=!fps_toggled; printf("FPS toggled ");  if(fps_toggled) printf("ON\n"); else printf("OFF\n"); }
         
         SDL_ClearSurface(screen_surf, 0,0,0,0);
-        draw_screen_one_color(screen_surf, color);
+        draw_screen_fuzzy_circles(screen_surf, color);
         SDL_UpdateWindowSurface(win);
         sum+=delta;
         if(it>=10)
