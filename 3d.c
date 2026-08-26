@@ -271,6 +271,7 @@ void fuzzy_circle(float cx, float cy, float r, Lab color, SDL_Surface* surf)
             pxl_draw(cx+x, cy+y, pitch, pixels, sdlcolor); //instead of this we should take an average
             //of the Lab color thats already there
             //and of the Lab color we want to apply to it
+            //And for that we would need to hold an array of Labs instead of a surface with RGB
         }
 }
 
@@ -345,7 +346,7 @@ void draw_screen_fuzzy_circles(SDL_Surface* surf, Lab color)
         float len_p1 = check_point_float(points+i,&sex,&sey);
         if(len_p1 > 0)
         {
-            float radius=.5+DIST_SCALING/len_p1;//powf(len_p1,.85);
+            float radius=+DIST_SCALING/len_p1;//powf(len_p1,.85);
             fuzzy_circle(sex, sey, radius, color, surf);
         }
     }
