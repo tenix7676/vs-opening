@@ -10,4 +10,6 @@ E and Q change what exponent the distances from the camera's original position a
 To leave press alt+f4.
 
 # compiling
+Make sure to be on the default branch.
+
 If you have Visual Studio installed you should have a shortcut called "x64 Native Tools Command Prompt for VS 2022" on your pc. Open that shortcut and navigate to the project's directory. Run `cr.bat`.
