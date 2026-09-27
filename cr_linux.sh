@@ -1,0 +1,1 @@
+cc *.c -lSDL3 -lm -o vs-opening -g

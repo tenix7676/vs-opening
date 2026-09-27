@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "3d.h"
 #include "oklab.h"
 #include <string.h> //for memcpy and memset
@@ -12,25 +13,17 @@ void update_s_y_s_x();
 void normalise(Point3d*);
 void update_cam_dir();
 
-int cam_dist;
-Point3d cam_dir;
 Point3d cam_pos;
-Point3d initial_cam_pos;
-Point3d scr_pos; 
-float cam_leftright=0;
-float cam_updown=0.0f;
-//the closer the screen, i mean virutal world viewport is to the camera
-// the closer i can get to a 3d point without it disappearing 
-// (because it goes behind the screen)
-// but i guess checking if a point goes behind the camera
-// instead of if it goes behind the screen also works great
-#define RENDER_IN_FRONT_OF_CAMERA
-#ifndef RENDER_IN_FRONT_OF_CAMERA
-#define RENDER_IN_FRONT_OF_SCREEN
-#endif
+Point3d scr_pos;
 int s_h,s_w;
 float v_w, v_h;
+Point3d cam_dir;
+int cam_dist;
 Point3d s_y, s_x;
+Point3d cam_dir;
+Point3d initial_cam_pos;
+float cam_leftright=0;
+float cam_updown=0.0f;
 
 size_t point_count=0;
 Point3d* points=NULL;
@@ -45,7 +38,7 @@ void init_3d(int s_w_, int s_h_)
     cam_dist=v_w*55/34.5;
     update_cam_dir();
     scr_pos=(Point3d){-1, 0, 0};
-    update_cam_pos(scr_pos);
+    update_cam_pos();
     initial_cam_pos = cam_pos;
     
     init_points();
@@ -320,7 +313,7 @@ void save_points()
     size_t size = 64+sizeof(Point3d)*point_count+sizeof(float)*point_count;
     char* p = malloc(size); // i guess instead of creating this one big chunk of memory we can use write and the and then append operations to write this data and 2 arrays but im not gonna update it now bruh
     memset(p, '.', 64);
-    sprintf(p,"%d\n", point_count);
+    sprintf(p,"%ld\n", point_count);
     memcpy(p+64                            , points, sizeof(Point3d)*point_count);
     memcpy(p+64+sizeof(Point3d)*point_count, dists, sizeof(float)*point_count);
     SDL_SaveFile("points_array.txt", p, size);

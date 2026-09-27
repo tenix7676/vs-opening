@@ -1,5 +1,5 @@
 #ifndef _3d_h
-#define _3dh_h
+#define _3d_h
 #include "SDL3/SDL.h"
 
 typedef struct Point3d
@@ -9,13 +9,25 @@ typedef struct Point3d
 
 void update_s_y_s_x(void);
 
-Point3d cam_pos;
-Point3d scr_pos;
-int s_h,s_w;
-float v_w, v_h;
-Point3d cam_dir;
-int cam_dist;
-Point3d s_y, s_x;
+extern Point3d cam_pos;
+extern Point3d scr_pos;
+extern int s_h,s_w;
+extern float v_w, v_h;
+extern Point3d cam_dir;
+extern int cam_dist;
+extern Point3d s_y, s_x;
+extern Point3d cam_dir;
+extern Point3d initial_cam_pos;
+extern float cam_leftright;
+extern float cam_updown;
+// the closer i can get to a 3d point without it disappearing 
+// (because it goes behind the screen)
+// but i guess checking if a point goes behind the camera
+// instead of if it goes behind the screen also works great
+#define RENDER_IN_FRONT_OF_CAMERA
+#ifndef RENDER_IN_FRONT_OF_CAMERA
+#define RENDER_IN_FRONT_OF_SCREEN
+#endif
 
 void init_3d(int s_w_, int s_h_);
 void init_points();
