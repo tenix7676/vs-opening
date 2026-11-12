@@ -91,11 +91,11 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     min->y=y0;
     max->x=x0;
     max->y=y0;
-
+    
     *avg_x=0;
     *avg_y=0;
     *weight=0;
-
+    
     int stack_size = 0;
 
     stack[stack_size]=(SDL_Point){x0,y0};
@@ -112,9 +112,9 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     {
         if(x-1 < 0)
             break;
-        int* pxl;
+        Uint8* pxl;
         pxl = &pixels[x-1 + (y)*width];
-
+        
         if(*pxl == 0)
             break;
         x--;
@@ -122,10 +122,10 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
     start_x=x;
     while(1)
     {
-        int* pxl;
-        int* pxl_behind;
-        int* pxl_top;
-        int* pxl_topleft;
+        Uint8* pxl;
+        Uint8* pxl_behind;
+        Uint8* pxl_top;
+        Uint8* pxl_topleft;
         if(x < 0 || x >= width)
         {
             skip_these_pixels[x+width*y]=1;
@@ -187,7 +187,7 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
                 //add top/ bottom
                 pxl_topleft = &pixels[x-1 + (y-1+bottom)*width];
                 pxl_top = &pixels[x + (y-1+bottom)*width];
-//later:
+//later:            
                 if(*pxl_top !=0 &&
                    *pxl_topleft==0)
                 {
@@ -211,20 +211,20 @@ void fill(int* pixels, int width, int height, int x0, int y0, float* avg_x, floa
         *avg_x+=pixels[x + (y)*width]*x;
         *avg_y+=pixels[x + (y)*width]*y;
         *weight+=pixels[x + (y)*width];
-
+        
         pixels[x + (y)*width] = 0;
     }
     if(start_x < min->x) min->x=start_x;
     if(end_x > max->x)   max->x=end_x;
     //now repeat for everyting in the stack
     } while(stack_size!=0);
-
+    
     *avg_x = *avg_x / *weight;
     *avg_y = *avg_y / *weight;
-
+    
 }
 
-void update_surf(Uint8* pixels, SDL_Surface* surf)
+void update_surf(int* pixels, SDL_Surface* surf)
 {
     Uint8* pixels_= surf->pixels;
     int width     = surf->w;
@@ -241,7 +241,7 @@ void update_surf(Uint8* pixels, SDL_Surface* surf)
                 pxl[2]=fmin(69+255*sqrtf(fabs(pixels[x+width*y]) / (3. * 255)),255);
             else if(pixels[x+width*y] < 0)
                 pxl[0]=fmin(69+255*sqrtf(fabs(pixels[x+width*y]) / (3. * 255)),255);
-        }
+        } 
 }
 
 void memcpy_area(int* to, int* from, int width, SDL_Point* min, SDL_Point* max)
@@ -281,20 +281,20 @@ int* ff(SDL_Window* win)
     int* fill_pixels = malloc(sizeof(int)*width*height);
     int* skip_these_pixels = malloc(sizeof(int)*width*height);
     for(int i=0; i < width*height; ++i) skip_these_pixels[i]=0;
-
+    
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
         {
             Uint8* pxl = pxl_at(x,y,pitch,pixels_);
             if(pxl[0]==16&&pxl[1]==16&&pxl[2]==16) pixels[x+width*y]=0;
-            else
+            else 
             {
                 pixels[x+width*y]=pxl[0]+pxl[1]+pxl[2]-55;
-                if(pixels[x+width*y]<0) pixels[x+width*y]=0;
+                if(pixels[x+width*y]<0) pixels[x+width*y]=0; 
             }
         }
     memcpy(fill_pixels, pixels, sizeof(int)*width*height);
-
+    
     int iterations = 2;(3 * 255-1)-55;
     int N=0;
     int added_points=0;
@@ -329,7 +329,7 @@ int* ff(SDL_Window* win)
                         }
                         weight_deleted*=correction_factor;
                         weight+=filled_pixels*N+weight_deleted;
-
+                        
                         float dist=2200/weight;
                         if(dist > .1)
                         {
@@ -349,9 +349,9 @@ int* ff(SDL_Window* win)
                 printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%",N, added_points_this_N, added_points, time, (x+width*y) * 100.f / (height*width));
             }
         }
-
+    
     for(int i=0; i < width*height; ++i) skip_these_pixels[i]=0; //reset skip_these_pixels for each N
-
+    
     for(int y=0; y<height; ++y)
         for(int x=0; x<width; ++x)
         {
@@ -364,13 +364,13 @@ int* ff(SDL_Window* win)
     sprintf(out_path, "passes/holyshit_after_%d_pass.bmp", N);
     SDL_SaveBMP(surf, out_path);
     save_points();
-
+    
     end=SDL_GetTicksNS();
     time=SDL_NS_TO_MS((float)end-start)/1000;
     printf("\rN=%3d added %4d points, overall we added %5d, time taken so far: %.1fs, %.2f%%\n",N, added_points_this_N, added_points, time, 100.f);
     N++;
     }
-
+    
     return pixels;
 }
 
@@ -489,7 +489,7 @@ int main(int argc, char* argv[])
         {
         int i=0;
         i++;
-
+        
         if(buttons[i].held) { move_camera(flyinGspeed); } ++i;
         if(buttons[i].held) { move_camera(-flyinGspeed); } ++i;
         if(buttons[i].held) { strafe_camera(flyinGspeed); } ++i;
@@ -500,8 +500,8 @@ int main(int argc, char* argv[])
         if(buttons[i].held) { ; } ++i;
         }
         reset_buttons();
-
-        const bool* keyboard = SDL_GetKeyboardState(NULL);
+        
+        bool* keyboard = SDL_GetKeyboardState(NULL);
         static int decreased=0;
         static float exponent=1;
         static int fps_toggled=0;
@@ -510,7 +510,7 @@ int main(int argc, char* argv[])
         if(keyboard[SDL_SCANCODE_Q]) { exponent/=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
         if(keyboard[SDL_SCANCODE_E]) { exponent*=1.00625; printf("Current exponent: %f\n", exponent); change_dist_exponent(exponent); }
         if(keyboard[SDL_SCANCODE_F] && !prev_keyboard[SDL_SCANCODE_F]) { fps_toggled=!fps_toggled; printf("FPS toggled ");  if(fps_toggled) printf("ON\n"); else printf("OFF\n"); }
-
+        
         SDL_ClearSurface(screen_surf, 0,0,0,0);
         draw_screen_one_color(screen_surf, color);
         SDL_UpdateWindowSurface(win);
